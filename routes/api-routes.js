@@ -13,6 +13,7 @@ router.post('/otpverify', UsersController.otpVerify);
 router.post('/saveuserdetails', UsersController.saveUserDetails);
 router.post('/updateuser', UsersController.updateUser);
 router.get('/searchusers/:name', UsersController.getSearchUsers);
+router.get('/getprofessions', UsersController.getProfessions);
 
 
 router.get('/termscondition', MasterController.getTermscondition);

@@ -233,6 +233,33 @@ let getSearchUsers = name => new Promise((resolve, reject) => {
         });
 });
 
+let getProfessions = () => new Promise((resolve, reject) => {
+    let sql = `select * from professions where is_active=1;`;
+    dbQuery.queryRunner(sql)
+        .then(result => {
+            if (result && result.length != 0) {
+                resolve({
+                    status: 200,
+                    message: "Fetch professions successfully.",
+                    data: result
+                });
+            } else {
+                reject({
+                    status: 400,
+                    message: "Professions not found.",
+                    data: result
+                });
+            }
+        })
+        .catch(err => {
+            reject({
+                status: 500,
+                message: err,
+                data: []
+            });
+        });
+});
+
 module.exports = {
     saveLoginOtp: userData => new Promise((resolve, reject) => {
         let status = 200;
@@ -395,6 +422,18 @@ module.exports = {
 
     getSearchUsers: name => new Promise((resolve, reject) => {
         return getSearchUsers(name).then(result => {
+            if (result && result.status == 200) {
+                resolve(result);
+            } else {
+                reject(result);
+            }
+        }).catch(err => {
+            reject(err);
+        })
+    }),
+
+    getProfessions: () => new Promise((resolve, reject) => {
+        return getProfessions().then(result => {
             if (result && result.status == 200) {
                 resolve(result);
             } else {
