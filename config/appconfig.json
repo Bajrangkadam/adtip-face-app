@@ -3,18 +3,18 @@
         "ACCOUNT_SID":"HXIN1750206983IN",
         "AUTH_TOKEN":"A31f877a48887a503d15a1ce85f1d23dd"
     },
-    "dbConfig": {
+    "dbQAConfig": {
         "host": "localhost",
         "user": "root",
         "password": "",
         "database": "face_adtip",
         "port": "3306"
     },
-    "dbQAConfig": {
+    "dbConfig": {
         "host": "45.130.228.205",
-        "user": "u863881604_adtip",
-        "password": "$Pass$@123",
-        "database": "u863881604_adtip",
+        "user": "u863881604_adtip_faceapp",
+        "password": "$Pass%@123",
+        "database": "u863881604_adtip_face_app",
         "port": "3306"
     }
 }

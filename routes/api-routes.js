@@ -12,6 +12,9 @@ router.post('/otplogin', UsersController.saveLoginOtp);
 router.post('/otpverify', UsersController.otpVerify);
 router.post('/saveuserdetails', UsersController.saveUserDetails);
 router.post('/updateuser', UsersController.updateUser);
+router.get('/searchusers/:name', UsersController.getSearchUsers);
+
+
 router.get('/termscondition', MasterController.getTermscondition);
 router.get('/flashscreen/:filename', MasterController.getFlashScreen);
 router.get('/video/:filename', MasterController.getFlashScreen);

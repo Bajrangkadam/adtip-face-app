@@ -64,4 +64,19 @@ module.exports = {
             });
     },
 
+    getSearchUsers: (req, res, next) => {
+        if (!req.params.name)return res.status(400).send({ status: 400, message: 'Invalid search', data: [] });
+        userService.getSearchUsers(req.params.name)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
 }

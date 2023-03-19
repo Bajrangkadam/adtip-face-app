@@ -206,6 +206,33 @@ let userSave = userData => new Promise((resolve, reject) => {
         });
 });
 
+let getSearchUsers = name => new Promise((resolve, reject) => {
+    let sql = `select * from users where name like '%${name}%';`;
+    dbQuery.queryRunner(sql)
+        .then(result => {
+            if (result && result.length != 0) {
+                resolve({
+                    status: 200,
+                    message: "Fetch user successfully.",
+                    data: result
+                });
+            } else {
+                reject({
+                    status: 400,
+                    message: "User not found.",
+                    data: result
+                });
+            }
+        })
+        .catch(err => {
+            reject({
+                status: 500,
+                message: err,
+                data: []
+            });
+        });
+});
+
 module.exports = {
     saveLoginOtp: userData => new Promise((resolve, reject) => {
         let status = 200;
@@ -364,6 +391,18 @@ module.exports = {
                     data: []
                 });
             });
-    })
+    }),
+
+    getSearchUsers: name => new Promise((resolve, reject) => {
+        return getSearchUsers(name).then(result => {
+            if (result && result.status == 200) {
+                resolve(result);
+            } else {
+                reject(result);
+            }
+        }).catch(err => {
+            reject(err);
+        })
+    }),
 
 }
