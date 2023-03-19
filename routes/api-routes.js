@@ -16,6 +16,7 @@ router.get('/searchusers/:name', UsersController.getSearchUsers);
 router.get('/getprofessions', UsersController.getProfessions);
 
 
+
 router.get('/termscondition', MasterController.getTermscondition);
 router.get('/flashscreen/:filename', MasterController.getFlashScreen);
 router.get('/video/:filename', MasterController.getFlashScreen);
