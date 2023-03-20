@@ -15,6 +15,7 @@ router.post('/updateuser', UsersController.updateUser);
 router.get('/searchusers/:name', UsersController.getSearchUsers);
 router.get('/geteducation', UsersController.getEducations);
 router.get('/getprofessions', UsersController.getProfessions);
+router.get('/getfamilyrelationmaster', UsersController.getFamilyRelationMaster);
 
 
 

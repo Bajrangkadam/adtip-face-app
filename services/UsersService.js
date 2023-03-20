@@ -287,6 +287,33 @@ let getEducations = () => new Promise((resolve, reject) => {
         });
 });
 
+let getFamilyRelationMaster = () => new Promise((resolve, reject) => {
+    let sql = `select * from family_relationship_master where is_active=1;`;
+    dbQuery.queryRunner(sql)
+        .then(result => {
+            if (result && result.length != 0) {
+                resolve({
+                    status: 200,
+                    message: "Fetch relationship successfully.",
+                    data: result
+                });
+            } else {
+                reject({
+                    status: 400,
+                    message: "Relationship not found.",
+                    data: result
+                });
+            }
+        })
+        .catch(err => {
+            reject({
+                status: 500,
+                message: err,
+                data: []
+            });
+        });
+});
+
 module.exports = {
     saveLoginOtp: userData => new Promise((resolve, reject) => {
         let status = 200;
@@ -421,7 +448,28 @@ module.exports = {
         if (userData.email) sql += ` emailId='${userData.email ? userData.email : ''}',`;
         if (userData.address) sql += ` address='${userData.address ? userData.address : ''}',`;
         if (userData.profileImage) sql += ` profile_image='${userData.profileImage ? userData.profileImage : ''}',`;
-            sql += ` updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30') where id=${userData.id}`;
+
+        if (userData.gender) sql += ` gender='${userData.gender ? userData.gender : ''}',`;
+        if (userData.maritalStatus) sql += ` marital_status='${userData.maritalStatus ? userData.maritalStatus : ''}',`;
+        if (userData.dob) sql += ` dob='${userData.dob ? userData.dob : ''}',`;
+        if (userData.bio) sql += ` bio='${userData.bio ? userData.bio : ''}',`;
+        if (userData.photos) sql += ` photos='${userData.photos ? userData.photos : ''}',`;
+        if (userData.companyName) sql += ` company_id='${userData.companyName ? userData.companyName : ''}',`;
+
+        if (userData.educationId) sql += ` education=${userData.educationId ? userData.educationId : ''},`;
+        if (userData.socialLinks) sql += ` social_links='${userData.socialLinks ? userData.socialLinks : ''}',`;
+        if (userData.achievements) sql += ` achievements='${userData.achievements ? userData.achievements : ''}',`;
+        sql += ` is_active=1, updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30') where id=${userData.id}`;
+
+        if (userData.familyMember.length != 0) {
+            let relationSql = `INSERT INTO family_relationship (user_id,relation_id,is_active,createdby) VALUES`;
+            userData.familyMember.forEach(element => {
+                relationSql += ` (${element.userId}, ${element.relationId},1,${element.createdBy}),`;
+            });
+            if (relationSql !== '') relationSql = relationSql.substring(0, relationSql.length - 1);
+            dbQuery.queryRunner(relationSql);
+        }
+
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
@@ -470,9 +518,20 @@ module.exports = {
             reject(err);
         })
     }),
-    
+
     getEducations: () => new Promise((resolve, reject) => {
         return getEducations().then(result => {
+            if (result && result.status == 200) {
+                resolve(result);
+            } else {
+                reject(result);
+            }
+        }).catch(err => {
+            reject(err);
+        })
+    }),
+    getFamilyRelationMaster: () => new Promise((resolve, reject) => {
+        return getFamilyRelationMaster().then(result => {
             if (result && result.status == 200) {
                 resolve(result);
             } else {

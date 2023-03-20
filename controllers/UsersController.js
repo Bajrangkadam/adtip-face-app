@@ -105,4 +105,18 @@ module.exports = {
             });
     },
 
+    getFamilyRelationMaster: (req, res, next) => {
+        userService.getFamilyRelationMaster()
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
 }
