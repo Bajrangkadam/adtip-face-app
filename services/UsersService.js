@@ -44,6 +44,10 @@ let getUserById = id => new Promise((resolve, reject) => {
     dbQuery.queryRunner(sql)
         .then(result => {
             if (result && result.length != 0) {
+                result[0].social_links = JSON.parse(JSON.stringify(result[0].social_links)).split(',');
+                result[0].achievements = JSON.parse(JSON.stringify(result[0].achievements)).split(',');
+                result[0].bio = JSON.parse(JSON.stringify(result[0].bio)).split(',');
+                result[0].photos = JSON.parse(JSON.stringify(result[0].photos)).split(',');
                 resolve({
                     status: 200,
                     message: "Fetch user successfully.",
@@ -314,6 +318,18 @@ let getFamilyRelationMaster = () => new Promise((resolve, reject) => {
         });
 });
 
+let dbDataMapping = result => {
+    if(result && result.length != 0){
+        result.forEach(element => {
+            element.social_links = JSON.parse(JSON.stringify(element.social_links)).split(',');
+            element.achievements = JSON.parse(JSON.stringify(element.achievements)).split(',');
+            element.bio = JSON.parse(JSON.stringify(element.bio)).split(',');
+            element.photos = JSON.parse(JSON.stringify(element.photos)).split(',');            
+        });
+    }
+    return result;
+}
+
 module.exports = {
     saveLoginOtp: userData => new Promise((resolve, reject) => {
         let status = 200;
@@ -541,4 +557,116 @@ module.exports = {
             reject(err);
         })
     }),
+    userRequestSave: userData => new Promise((resolve, reject) => {
+        let sql = `INSERT INTO user_requests(user_id,request_status,created_by,created_date) VALUES (${userData.userId},1,${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'));`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "User request save successfully.",
+                        data: [userData]
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "User request not save.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+    
+    updateUserRequestStatus: userData => new Promise((resolve, reject) => {
+        let sql = `UPDATE user_requests SET request_status=${userData.requestStatus}, updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30') where created_by= ${userData.userId} and user_id=${userData.createdBy};`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "User request save successfully.",
+                        data: [userData]
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "User request not save.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    getSendRequestByUserId: userId => new Promise((resolve, reject) => {
+        let sql = `select u.*,ur.request_status as requestStatus,ur.created_date as requestedDate from user_requests ur INNER JOIN users u ON ur.user_id=u.id where ur.created_by=${userId} order by ur.created_date desc;`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    let updateResult=dbDataMapping(result);
+                    resolve({
+                        status: 200,
+                        message: "Fetch user request successfully.",
+                        data: updateResult
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "User request not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    getRecievedRequestByUserId: userId => new Promise((resolve, reject) => {
+        let sql = `select u.*, ur.request_status, ur.created_date as requestedDate from user_requests ur INNER JOIN users u ON ur.created_by=u.id where ur.user_id=${userId} order by ur.created_date desc`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    let updateResult=dbDataMapping(result);
+                    resolve({
+                        status: 200,
+                        message: "Fetch user request successfully.",
+                        data: updateResult
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "User request not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+
+
 }

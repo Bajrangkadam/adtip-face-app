@@ -119,4 +119,61 @@ module.exports = {
             });
     },
 
+    userRequestSave: (req, res, next) => {
+        userService.userRequestSave(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
+    getSendRequestByUserId: (req, res, next) => {
+        userService.getSendRequestByUserId(req.params.userid)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+    getRecievedRequestByUserId: (req, res, next) => {
+        userService.getRecievedRequestByUserId(req.params.userid)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
+    
+    updateUserRequestStatus: (req, res, next) => {
+        userService.updateUserRequestStatus(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+    
+
 }

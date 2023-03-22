@@ -16,7 +16,11 @@ router.get('/searchusers/:name', UsersController.getSearchUsers);
 router.get('/geteducation', UsersController.getEducations);
 router.get('/getprofessions', UsersController.getProfessions);
 router.get('/getfamilyrelationmaster', UsersController.getFamilyRelationMaster);
-
+router.get('/getuserbyid/:id', UsersController.getUser);
+router.post('/userrequestsave', UsersController.userRequestSave);
+router.post('/updateuserrequeststatus', UsersController.updateUserRequestStatus);
+router.get('/getsendrequest/:userid', UsersController.getSendRequestByUserId);
+router.get('/getrecievedrequest/:userid', UsersController.getRecievedRequestByUserId);
 
 
 router.get('/termscondition', MasterController.getTermscondition);
