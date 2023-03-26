@@ -40,26 +40,33 @@ let updateOtpUser = userData => new Promise((resolve, reject) => {
 });
 
 let getUserById = id => new Promise((resolve, reject) => {
+    let userData = '';
     let sql = `select * from users where id=${id};`;
+    let sql1 = `select fr.id as frId,u.id as userId,u.profile_image as profileImage, u.name as userName,frm.name as relation,u.profession from users u
+    LEFT OUTER JOIN users b ON u.id=b.id INNER JOIN family_relationship fr ON u.id=fr.user_id INNER JOIN family_relationship_master frm ON fr.relation_id=frm.id
+    where fr.createdby=${id};
+    `
     dbQuery.queryRunner(sql)
         .then(result => {
             if (result && result.length != 0) {
-                result[0].social_links = JSON.parse(JSON.stringify(result[0].social_links)).split(',');
-                result[0].achievements = JSON.parse(JSON.stringify(result[0].achievements)).split(',');
-                result[0].bio = JSON.parse(JSON.stringify(result[0].bio)).split(',');
-                result[0].photos = JSON.parse(JSON.stringify(result[0].photos)).split(',');
+                userData = result;
+                return dbQuery.queryRunner(sql1);
+            } else {
                 resolve({
                     status: 200,
-                    message: "Fetch user successfully.",
-                    data: result
-                });
-            } else {
-                reject({
-                    status: 400,
                     message: "User not found.",
                     data: result
                 });
             }
+        })
+        .then(result => {
+            userData[0].familyMember=result;
+            let updateResult = dbDataMapping(userData);
+            resolve({
+                status: 200,
+                message: "Fetch user successfully.",
+                data: updateResult
+            });
         })
         .catch(err => {
             reject({
@@ -319,12 +326,12 @@ let getFamilyRelationMaster = () => new Promise((resolve, reject) => {
 });
 
 let dbDataMapping = result => {
-    if(result && result.length != 0){
+    if (result && result.length != 0) {
         result.forEach(element => {
-            element.social_links = JSON.parse(JSON.stringify(element.social_links)).split(',');
-            element.achievements = JSON.parse(JSON.stringify(element.achievements)).split(',');
-            element.bio = JSON.parse(JSON.stringify(element.bio)).split(',');
-            element.photos = JSON.parse(JSON.stringify(element.photos)).split(',');            
+            element.social_links = element.social_links ? JSON.parse(JSON.stringify(element.social_links)).split(','): [];
+            element.achievements = element.achievements ? JSON.parse(JSON.stringify(element.achievements)).split(',') : [];
+            element.bio = element.bio ? JSON.parse(JSON.stringify(element.bio)).split(','): [];
+            element.photos = element.photos ? JSON.parse(JSON.stringify(element.photos)).split(','): [];
         });
     }
     return result;
@@ -461,6 +468,7 @@ module.exports = {
     updateUser: userData => new Promise((resolve, reject) => {
         let sql = `update users set `
         if (userData.name) sql += ` name='${userData.name ? userData.name : ''}',`;
+        if (userData.userName) sql += ` username='${userData.userName ? userData.userName : ''}',`;
         if (userData.email) sql += ` emailId='${userData.email ? userData.email : ''}',`;
         if (userData.address) sql += ` address='${userData.address ? userData.address : ''}',`;
         if (userData.profileImage) sql += ` profile_image='${userData.profileImage ? userData.profileImage : ''}',`;
@@ -475,9 +483,15 @@ module.exports = {
         if (userData.educationId) sql += ` education=${userData.educationId ? userData.educationId : ''},`;
         if (userData.socialLinks) sql += ` social_links='${userData.socialLinks ? userData.socialLinks : ''}',`;
         if (userData.achievements) sql += ` achievements='${userData.achievements ? userData.achievements : ''}',`;
+        if (userData.isPrivateProfile) sql += ` is_private_profile='${userData.isPrivateProfile ? userData.isPrivateProfile : ''}',`;
+
+        if (userData.isPrivateGender) sql += ` is_private_gender='${userData.isPrivateGender ? userData.isPrivateGender : ''}',`;
+        if (userData.isPrivateBirthDate) sql += ` is_private_birthdate='${userData.isPrivateBirthDate ? userData.isPrivateBirthDate : ''}',`;
+        if (userData.isPrivateMaritalstatus) sql += ` is_private_maritalstatus='${userData.isPrivateMaritalstatus ? userData.isPrivateMaritalstatus : ''}',`;
+
         sql += ` is_active=1, updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30') where id=${userData.id}`;
 
-        if (userData.familyMember.length != 0) {
+        if (userData.familyMember && userData.familyMember.length != 0) {
             let relationSql = `INSERT INTO family_relationship (user_id,relation_id,is_active,createdby) VALUES`;
             userData.familyMember.forEach(element => {
                 relationSql += ` (${element.userId}, ${element.relationId},1,${element.createdBy}),`;
@@ -583,7 +597,7 @@ module.exports = {
                 });
             });
     }),
-    
+
     updateUserRequestStatus: userData => new Promise((resolve, reject) => {
         let sql = `UPDATE user_requests SET request_status=${userData.requestStatus}, updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30') where created_by= ${userData.userId} and user_id=${userData.createdBy};`;
         dbQuery.queryRunner(sql)
@@ -616,7 +630,7 @@ module.exports = {
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
-                    let updateResult=dbDataMapping(result);
+                    let updateResult = dbDataMapping(result);
                     resolve({
                         status: 200,
                         message: "Fetch user request successfully.",
@@ -644,7 +658,7 @@ module.exports = {
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
-                    let updateResult=dbDataMapping(result);
+                    let updateResult = dbDataMapping(result);
                     resolve({
                         status: 200,
                         message: "Fetch user request successfully.",
@@ -667,6 +681,114 @@ module.exports = {
             });
     }),
 
+    getUsersProfilesByCategaryId: categaryId => new Promise((resolve, reject) => {
+        let sql = `select * from users where profession=${categaryId};`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    let updateResult = dbDataMapping(result);
+                    resolve({
+                        status: 200,
+                        message: "Fetch user successfully.",
+                        data: updateResult
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "User not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
 
+    getPublicUserProfile: () => new Promise((resolve, reject) => {
+        let sql = `select * from users where is_private_profile=0;`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    let updateResult = dbDataMapping(result);
+                    resolve({
+                        status: 200,
+                        message: "Fetch user successfully.",
+                        data: updateResult
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "User not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+    getPrivateUserProfile: () => new Promise((resolve, reject) => {
+        let sql = `select * from users where is_private_profile=1;`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    let updateResult = dbDataMapping(result);
+                    resolve({
+                        status: 200,
+                        message: "Fetch user successfully.",
+                        data: updateResult
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "User not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+    
+    checkUserName: userName => new Promise((resolve, reject) => {
+        let sql = `select * from users where username='${userName}';`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "Username already exists.",
+                        data: result
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "Username not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
 
 }

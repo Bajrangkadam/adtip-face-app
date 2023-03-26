@@ -63,7 +63,6 @@ module.exports = {
                 });
             });
     },
-
     getSearchUsers: (req, res, next) => {
         if (!req.params.name)return res.status(400).send({ status: 400, message: 'Invalid search', data: [] });
         userService.getSearchUsers(req.params.name)
@@ -104,7 +103,6 @@ module.exports = {
                 });
             });
     },
-
     getFamilyRelationMaster: (req, res, next) => {
         userService.getFamilyRelationMaster()
             .then(result => {
@@ -118,7 +116,6 @@ module.exports = {
                 });
             });
     },
-
     userRequestSave: (req, res, next) => {
         userService.userRequestSave(req.body)
             .then(result => {
@@ -132,7 +129,6 @@ module.exports = {
                 });
             });
     },
-
     getSendRequestByUserId: (req, res, next) => {
         userService.getSendRequestByUserId(req.params.userid)
             .then(result => {
@@ -158,9 +154,7 @@ module.exports = {
                     data: []
                 });
             });
-    },
-
-    
+    },   
     updateUserRequestStatus: (req, res, next) => {
         userService.updateUserRequestStatus(req.body)
             .then(result => {
@@ -174,6 +168,59 @@ module.exports = {
                 });
             });
     },
+    getUsersProfilesByCategaryId: (req, res, next) => {
+        userService.getUsersProfilesByCategaryId(req.params.categaryid)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
     
+    getPublicUserProfile: (req, res, next) => {
+        userService.getPublicUserProfile()
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
+    getPrivateUserProfile: (req, res, next) => {
+        userService.getPrivateUserProfile()
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+    checkUserName: (req, res, next) => {
+        userService.checkUserName(req.params.username)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
 
 }

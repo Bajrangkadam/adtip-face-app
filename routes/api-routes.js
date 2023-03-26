@@ -21,7 +21,10 @@ router.post('/userrequestsave', UsersController.userRequestSave);
 router.post('/updateuserrequeststatus', UsersController.updateUserRequestStatus);
 router.get('/getsendrequest/:userid', UsersController.getSendRequestByUserId);
 router.get('/getrecievedrequest/:userid', UsersController.getRecievedRequestByUserId);
-
+router.get('/getusersprofilesbycategary/:categaryid', UsersController.getUsersProfilesByCategaryId);
+router.get('/getpublicuserprofile', UsersController.getPublicUserProfile);
+router.get('/getprivateuserprofile', UsersController.getPrivateUserProfile);
+router.get('/checkusername/:username', UsersController.checkUserName);
 
 router.get('/termscondition', MasterController.getTermscondition);
 router.get('/flashscreen/:filename', MasterController.getFlashScreen);
