@@ -477,7 +477,7 @@ module.exports = {
         if (userData.career) sql += ` career='${userData.career ? userData.career : ''}',`;
         if (userData.goals) sql += ` goals='${userData.goals ? userData.goals : ''}',`;
         if (userData.philanthropy) sql += ` philanthropy='${userData.philanthropy ? userData.philanthropy : ''}',`;
-        
+
         if (userData.gender) sql += ` gender='${userData.gender ? userData.gender : ''}',`;
         if (userData.maritalStatus) sql += ` marital_status='${userData.maritalStatus ? userData.maritalStatus : ''}',`;
         if (userData.dob) sql += ` dob='${userData.dob ? userData.dob : ''}',`;
@@ -804,8 +804,8 @@ module.exports = {
             });
     }),
 
-    saveUserRawPhoto: userData => {
-        let sql = `update users set raw_photos='${userData.RawPhotos}' where id=${userData.id}`;
+    saveUserRawPhoto: userData => new Promise((resolve, reject) => {
+        let sql = `update users set raw_photos='${userData.rawPhotos}' where id=${userData.id}`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
