@@ -473,6 +473,11 @@ module.exports = {
         if (userData.address) sql += ` address='${userData.address ? userData.address : ''}',`;
         if (userData.profileImage) sql += ` profile_image='${userData.profileImage ? userData.profileImage : ''}',`;
 
+        if (userData.earlyLifeFamily) sql += ` early_life_family='${userData.earlyLifeFamily ? userData.earlyLifeFamily : ''}',`;
+        if (userData.career) sql += ` career='${userData.career ? userData.career : ''}',`;
+        if (userData.goals) sql += ` goals='${userData.goals ? userData.goals : ''}',`;
+        if (userData.philanthropy) sql += ` philanthropy='${userData.philanthropy ? userData.philanthropy : ''}',`;
+        
         if (userData.gender) sql += ` gender='${userData.gender ? userData.gender : ''}',`;
         if (userData.maritalStatus) sql += ` marital_status='${userData.maritalStatus ? userData.maritalStatus : ''}',`;
         if (userData.dob) sql += ` dob='${userData.dob ? userData.dob : ''}',`;
@@ -491,6 +496,14 @@ module.exports = {
 
         sql += ` is_active=1, updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30') where id=${userData.id}`;
 
+        if (userData.educationData && userData.educationData.length != 0) {
+            let educationSql = `INSERT INTO user_educations (user_id,educationId,grade,location,course,year,is_active,created_by,created_date) VALUES`;
+            userData.educationData.forEach(element => {
+                educationSql += ` (${userData.id}, ${element.educationId},'${element.grade}','${element.location}','${element.course}','${element.year}',1,${userData.id},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')),`;
+            });
+            if (educationSql !== '') educationSql = educationSql.substring(0, educationSql.length - 1);
+            dbQuery.queryRunner(educationSql);
+        }
         if (userData.familyMember && userData.familyMember.length != 0) {
             let relationSql = `INSERT INTO family_relationship (user_id,relation_id,is_active,createdby) VALUES`;
             userData.familyMember.forEach(element => {
@@ -790,5 +803,32 @@ module.exports = {
                 });
             });
     }),
+
+    saveUserRawPhoto: userData => {
+        let sql = `update users set raw_photos='${userData.RawPhotos}' where id=${userData.id}`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "users photos saved.",
+                        data: result
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "users not save.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    },
 
 }
