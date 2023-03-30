@@ -829,6 +829,6 @@ module.exports = {
                     data: []
                 });
             });
-    },
+    }),
 
 }
