@@ -265,4 +265,34 @@ module.exports = {
             });
     },
 
+    getNearestUser: (req, res, next) => {
+        if (!req.body.latitude || !req.body.longitude) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.body });
+        userService.getNearestUser(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+    
+    deleteSendRequest: (req, res, next) => {
+        if (!req.body.userId || !req.body.createdBy) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.body });
+        userService.deleteSendRequest(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
 }

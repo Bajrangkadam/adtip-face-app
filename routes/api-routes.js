@@ -28,6 +28,8 @@ router.get('/checkusername/:username', UsersController.checkUserName);
 router.post('/saveuserrawphoto', UsersController.saveUserRawPhoto);
 router.get('/getuserbycategary', UsersController.getUserbyCategary);
 router.post('/updateuserlatlong', UsersController.updateUserLatLong);
+router.post('/getnearuser', UsersController.getNearestUser);
+router.post('/deletesendrequest', UsersController.deleteSendRequest);
 
 
 router.get('/termscondition', MasterController.getTermscondition);

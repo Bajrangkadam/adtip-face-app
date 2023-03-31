@@ -893,4 +893,58 @@ module.exports = {
             });
     }),
 
+    getNearestUser: userData => new Promise((resolve, reject) => {
+        let sql=`select * from users where latitude <= '${userData.latitude}' and longitude >= '${userData.longitude}';`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "Fetch users successfully.",
+                        data: result
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "users not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    deleteSendRequest: userData => new Promise((resolve, reject) => {
+        let sql = `DELETE FROM user_requests where user_id=${userData.userId} and created_by=${userData.createdBy};`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "User request delete successfully.",
+                        data: [userData]
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "User request not deleted.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
 }
