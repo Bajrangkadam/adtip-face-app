@@ -295,4 +295,48 @@ module.exports = {
             });
     },
 
+    userDetailsUpdate: (req, res, next) => {
+        if (!req.body.userId || !req.body.createdBy) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.body });
+        userService.userDetailsUpdate(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
+    getSavedProfiles: (req, res, next) => {
+        if (!req.params.userid) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.body });
+        userService.getSavedProfiles(req.params.userid)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
+    getAllusers: (req, res, next) => {
+        userService.getAllusers()
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
 }

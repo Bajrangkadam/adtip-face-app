@@ -898,10 +898,11 @@ module.exports = {
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
+                    let updateResult = dbDataMapping(result);
                     resolve({
                         status: 200,
                         message: "Fetch users successfully.",
-                        data: result
+                        data: updateResult
                     });
                 } else {
                     resolve({
@@ -934,6 +935,94 @@ module.exports = {
                     reject({
                         status: 400,
                         message: "User request not deleted.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    userDetailsUpdate: userData => new Promise((resolve, reject) => {
+        let sql = '';
+
+        if (userData.isSaveProfile) sql += `INSERT INTO user_details (user_id,is_save_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isSaveProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_save_profile='${userData.isSaveProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
+        if (userData.isLikeProfile) sql += `INSERT INTO user_details (user_id,is_like_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isLikeProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_like_profile='${userData.isLikeProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
+        if (userData.isViewProfile) sql += `INSERT INTO user_details (user_id,is_view_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isViewProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_view_profile='${userData.isViewProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
+
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "User data update successfully.",
+                        data: [userData]
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "User data not saved.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    getSavedProfiles: userId => new Promise((resolve, reject) => {
+        let sql=`select u.* from user_details ud INNER JOIN users u on u.id=ud.user_id where ud.created_by=${userId} and is_save_profile=1;`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    let updateResult = dbDataMapping(result);
+                    resolve({
+                        status: 200,
+                        message: "Fetch users successfully.",
+                        data: updateResult
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "users not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    getAllusers: () => new Promise((resolve, reject) => {
+        let sql=`select * from users where is_active=1;`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    let updateResult = dbDataMapping(result);
+                    resolve({
+                        status: 200,
+                        message: "Fetch users successfully.",
+                        data: updateResult
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "users not found.",
                         data: result
                     });
                 }

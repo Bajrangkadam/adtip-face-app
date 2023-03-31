@@ -30,6 +30,9 @@ router.get('/getuserbycategary', UsersController.getUserbyCategary);
 router.post('/updateuserlatlong', UsersController.updateUserLatLong);
 router.post('/getnearuser', UsersController.getNearestUser);
 router.post('/deletesendrequest', UsersController.deleteSendRequest);
+router.post('/userdetailsupdate', UsersController.userDetailsUpdate);
+router.get('/getsavedprofiles/:userid', UsersController.getSavedProfiles);
+router.get('/getallusers', UsersController.getAllusers);
 
 
 router.get('/termscondition', MasterController.getTermscondition);
