@@ -181,6 +181,34 @@ module.exports = {
                 });
             });
     },
+
+    getUserbyCategary: (req, res, next) => {
+        userService.getUserbyCategary()
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
+    updateUserLatLong: (req, res, next) => {
+        userService.updateUserLatLong(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
     
     getPublicUserProfile: (req, res, next) => {
         userService.getPublicUserProfile()

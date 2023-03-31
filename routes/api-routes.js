@@ -26,6 +26,9 @@ router.get('/getpublicuserprofile', UsersController.getPublicUserProfile);
 router.get('/getprivateuserprofile', UsersController.getPrivateUserProfile);
 router.get('/checkusername/:username', UsersController.checkUserName);
 router.post('/saveuserrawphoto', UsersController.saveUserRawPhoto);
+router.get('/getuserbycategary', UsersController.getUserbyCategary);
+router.post('/updateuserlatlong', UsersController.updateUserLatLong);
+
 
 router.get('/termscondition', MasterController.getTermscondition);
 router.get('/flashscreen/:filename', MasterController.getFlashScreen);

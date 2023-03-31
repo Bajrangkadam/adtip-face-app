@@ -722,6 +722,41 @@ module.exports = {
             });
     }),
 
+    getUserbyCategary: () => new Promise((resolve, reject) => {
+        let sql = `select u.*,p.name as professionName from users u INNER JOIN professions p on p.id=u.profession where u.is_active=1;`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    let updateResult = dbDataMapping(result);
+                    var groupBy = function(xs, key) {
+                        return xs.reduce(function(rv, x) {
+                          (rv[x[key]] = rv[x[key]] || []).push(x);
+                          return rv;
+                        }, {});
+                      };
+                      let groubedByTeam = groupBy(updateResult, 'professionName')
+                    resolve({
+                        status: 200,
+                        message: "Fetch user successfully.",
+                        data: groubedByTeam
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "User not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
     getPublicUserProfile: () => new Promise((resolve, reject) => {
         let sql = `select * from users where is_private_profile=0;`;
         dbQuery.queryRunner(sql)
@@ -812,12 +847,39 @@ module.exports = {
                     resolve({
                         status: 200,
                         message: "users photos saved.",
-                        data: result
+                        data: userData
                     });
                 } else {
                     resolve({
                         status: 200,
                         message: "users not save.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    updateUserLatLong: userData => new Promise((resolve, reject) => {
+        let sql = `update users set longitude='${userData.longitude}', latitude='${userData.latitude}' where id=${userData.id}`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "users location saved.",
+                        data: userData
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "users data not save.",
                         data: result
                     });
                 }
