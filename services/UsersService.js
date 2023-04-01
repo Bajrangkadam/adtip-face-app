@@ -331,6 +331,7 @@ let dbDataMapping = result => {
             element.social_links = element.social_links ? JSON.parse(element.social_links) : [];
             element.achievements = element.achievements ? JSON.parse(element.achievements) : [];
             element.language = element.language ? JSON.parse(element.language) : [];
+            element.education=element.education ? JSON.parse(element.education) : [];
             element.company=element.company ? JSON.parse(element.company) : [];
             element.photos = element.photos ? JSON.parse(JSON.stringify(element.photos)).split(',') : [];
         });
@@ -490,7 +491,7 @@ module.exports = {
         if (userData.socialLinks) sql += ` social_links='${userData.socialLinks ? JSON.stringify(userData.socialLinks) : ''}',`;
         if (userData.achievements) sql += ` achievements='${userData.achievements ? JSON.stringify(userData.achievements) : ''}',`;
 
-        if (userData.educationId) sql += ` education=${userData.educationId ? userData.educationId : ''},`;
+        if (userData.educationData) sql += ` education='${userData.educationData ? JSON.stringify(userData.educationData) : ''}',`;
         if (userData.isPrivateProfile) sql += ` is_private_profile='${userData.isPrivateProfile ? userData.isPrivateProfile : ''}',`;
 
         if (userData.isPrivateGender) sql += ` is_private_gender='${userData.isPrivateGender ? userData.isPrivateGender : ''}',`;
