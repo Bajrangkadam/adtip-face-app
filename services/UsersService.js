@@ -60,7 +60,7 @@ let getUserById = id => new Promise((resolve, reject) => {
             }
         })
         .then(result => {
-            userData[0].familyMember=result;
+            userData[0].familyMember = result;
             let updateResult = dbDataMapping(userData);
             resolve({
                 status: 200,
@@ -328,10 +328,11 @@ let getFamilyRelationMaster = () => new Promise((resolve, reject) => {
 let dbDataMapping = result => {
     if (result && result.length != 0) {
         result.forEach(element => {
-            element.social_links = element.social_links ? JSON.parse(JSON.stringify(element.social_links)).split(','): [];
-            element.achievements = element.achievements ? JSON.parse(JSON.stringify(element.achievements)).split(',') : [];
-            element.bio = element.bio ? JSON.parse(JSON.stringify(element.bio)).split(','): [];
-            element.photos = element.photos ? JSON.parse(JSON.stringify(element.photos)).split(','): [];
+            element.social_links = element.social_links ? JSON.parse(element.social_links) : [];
+            element.achievements = element.achievements ? JSON.parse(element.achievements) : [];
+            element.language = element.language ? JSON.parse(element.language) : [];
+            element.company=element.company ? JSON.parse(element.company) : [];
+            element.photos = element.photos ? JSON.parse(JSON.stringify(element.photos)).split(',') : [];
         });
     }
     return result;
@@ -483,11 +484,13 @@ module.exports = {
         if (userData.dob) sql += ` dob='${userData.dob ? userData.dob : ''}',`;
         if (userData.bio) sql += ` bio='${userData.bio ? userData.bio : ''}',`;
         if (userData.photos) sql += ` photos='${userData.photos ? userData.photos : ''}',`;
-        if (userData.companyName) sql += ` company_id='${userData.companyName ? userData.companyName : ''}',`;
+
+        if (userData.company) sql += ` company='${userData.company ? JSON.stringify(userData.company) : ''}',`;
+        if (userData.language) sql += ` language='${userData.language ? JSON.stringify(userData.language) : ''}',`;
+        if (userData.socialLinks) sql += ` social_links='${userData.socialLinks ? JSON.stringify(userData.socialLinks) : ''}',`;
+        if (userData.achievements) sql += ` achievements='${userData.achievements ? JSON.stringify(userData.achievements) : ''}',`;
 
         if (userData.educationId) sql += ` education=${userData.educationId ? userData.educationId : ''},`;
-        if (userData.socialLinks) sql += ` social_links='${userData.socialLinks ? userData.socialLinks : ''}',`;
-        if (userData.achievements) sql += ` achievements='${userData.achievements ? userData.achievements : ''}',`;
         if (userData.isPrivateProfile) sql += ` is_private_profile='${userData.isPrivateProfile ? userData.isPrivateProfile : ''}',`;
 
         if (userData.isPrivateGender) sql += ` is_private_gender='${userData.isPrivateGender ? userData.isPrivateGender : ''}',`;
@@ -728,13 +731,13 @@ module.exports = {
             .then(result => {
                 if (result && result.length != 0) {
                     let updateResult = dbDataMapping(result);
-                    var groupBy = function(xs, key) {
-                        return xs.reduce(function(rv, x) {
-                          (rv[x[key]] = rv[x[key]] || []).push(x);
-                          return rv;
+                    var groupBy = function (xs, key) {
+                        return xs.reduce(function (rv, x) {
+                            (rv[x[key]] = rv[x[key]] || []).push(x);
+                            return rv;
                         }, {});
-                      };
-                      let groubedByTeam = groupBy(updateResult, 'professionName')
+                    };
+                    let groubedByTeam = groupBy(updateResult, 'professionName')
                     resolve({
                         status: 200,
                         message: "Fetch user successfully.",
@@ -811,7 +814,7 @@ module.exports = {
                 });
             });
     }),
-    
+
     checkUserName: userName => new Promise((resolve, reject) => {
         let sql = `select * from users where username='${userName}';`;
         dbQuery.queryRunner(sql)
@@ -894,7 +897,7 @@ module.exports = {
     }),
 
     getNearestUser: userData => new Promise((resolve, reject) => {
-        let sql=`select * from users where latitude <= '${userData.latitude}' and longitude >= '${userData.longitude}';`;
+        let sql = `select * from users where latitude <= '${userData.latitude}' and longitude >= '${userData.longitude}';`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
@@ -981,7 +984,7 @@ module.exports = {
     }),
 
     getSavedProfiles: userId => new Promise((resolve, reject) => {
-        let sql=`select u.* from user_details ud INNER JOIN users u on u.id=ud.user_id where ud.created_by=${userId} and is_save_profile=1;`;
+        let sql = `select u.* from user_details ud INNER JOIN users u on u.id=ud.user_id where ud.created_by=${userId} and is_save_profile=1;`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
@@ -1009,7 +1012,7 @@ module.exports = {
     }),
 
     getAllusers: () => new Promise((resolve, reject) => {
-        let sql=`select * from users where is_active=1;`;
+        let sql = `select * from users where is_active=1;`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
