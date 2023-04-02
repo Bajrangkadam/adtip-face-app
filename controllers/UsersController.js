@@ -311,7 +311,7 @@ module.exports = {
     },
 
     getSavedProfiles: (req, res, next) => {
-        if (!req.params.userid) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.body });
+        if (!req.params.userid) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.params });
         userService.getSavedProfiles(req.params.userid)
             .then(result => {
                 res.status(result.status || 200).send(result);
@@ -326,7 +326,8 @@ module.exports = {
     },
 
     getAllusers: (req, res, next) => {
-        userService.getAllusers()
+        if (!req.params.userid) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.params });
+        userService.getAllusers(req.params.userid)
             .then(result => {
                 res.status(result.status || 200).send(result);
             })

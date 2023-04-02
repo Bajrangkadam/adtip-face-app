@@ -1028,8 +1028,11 @@ module.exports = {
             });
     }),
 
-    getAllusers: () => new Promise((resolve, reject) => {
-        let sql = `select * from users where is_active=1;`;
+    getAllusers: userId => new Promise((resolve, reject) => {
+        let sql = `select u.* ,ur.request_status,is_save_profile from users u
+        LEFT JOIN user_requests ur ON ur.user_id=u.id and ur.created_by=${userId}
+        LEFT JOIN user_details ud ON ud.user_id=u.id and ud.is_save_profile=1 and ud.created_by=${userId}
+        where u.is_active=1 and u.id != ${userId} order by u.created_date desc`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
