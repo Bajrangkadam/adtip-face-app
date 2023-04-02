@@ -741,9 +741,11 @@ module.exports = {
                     categaryData=_.uniq(categaryData);
                     if(categaryData && categaryData.length != 0){
                         categaryData.forEach(element => {
+                            let usersData=_.filter(updateResult,user => user.professionName === element);
                             let categaryObj={
+                                id:usersData && usersData.length !=0 ? usersData[0].profession : null,
                                 name: element,
-                                users: _.filter(updateResult,user => user.professionName === element)
+                                users: usersData
                             }
                             finalData.push(categaryObj);
                         });
