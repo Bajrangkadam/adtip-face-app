@@ -616,19 +616,21 @@ module.exports = {
     }),
 
     updateUserRequestStatus: userData => new Promise((resolve, reject) => {
+        let checkUserRequestExist=`select id from user_requests where created_by= ${userData.userId} and user_id=${userData.createdBy};`;
         let sql = `UPDATE user_requests SET request_status=${userData.requestStatus}, updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30') where created_by= ${userData.userId} and user_id=${userData.createdBy};`;
-        dbQuery.queryRunner(sql)
+        dbQuery.queryRunner(checkUserRequestExist)
             .then(result => {
                 if (result && result.length != 0) {
+                    dbQuery.queryRunner(sql);
                     resolve({
                         status: 200,
                         message: "User request save successfully.",
                         data: [userData]
                     });
                 } else {
-                    reject({
-                        status: 400,
-                        message: "User request not save.",
+                    resolve({
+                        status: 200,
+                        message: "User request not found.",
                         data: result
                     });
                 }
