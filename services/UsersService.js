@@ -1,5 +1,6 @@
+const _ = require('underscore');
 const utils = require('../utils/utils');
-let dbQuery = require('../dbConfig/queryRunner');
+const dbQuery = require('../dbConfig/queryRunner');
 
 let updateOtpUser = userData => new Promise((resolve, reject) => {
     let sql = `update users set otp='${userData.otp}',message_id='${userData.messageId}' where mobile_number='${userData.mobileNumber}'`;
@@ -728,23 +729,35 @@ module.exports = {
             });
     }),
 
-    getUserbyCategary: () => new Promise((resolve, reject) => {
+    getUserbyCategary: () => new Promise((resolve, reject) => {        
         let sql = `select u.*,p.name as professionName from users u INNER JOIN professions p on p.id=u.profession where u.is_active=1;`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
+                    let finalData=[];
                     let updateResult = dbDataMapping(result);
-                    var groupBy = function (xs, key) {
-                        return xs.reduce(function (rv, x) {
-                            (rv[x[key]] = rv[x[key]] || []).push(x);
-                            return rv;
-                        }, {});
-                    };
-                    let groubedByTeam = groupBy(updateResult, 'professionName')
+                    let categaryData=_.pluck(updateResult, 'professionName');
+                    categaryData=_.uniq(categaryData);
+                    if(categaryData && categaryData.length != 0){
+                        categaryData.forEach(element => {
+                            let categaryObj={
+                                name: element,
+                                users: _.filter(updateResult,user => user.professionName === element)
+                            }
+                            finalData.push(categaryObj);
+                        });
+                    }
+                    // var groupBy = function (xs, key) {
+                    //     return xs.reduce(function (rv, x) {
+                    //         (rv[x[key]] = rv[x[key]] || []).push(x);
+                    //         return rv;
+                    //     }, {});
+                    // };
+                    // let groubedByTeam = groupBy(updateResult, 'professionName')
                     resolve({
                         status: 200,
                         message: "Fetch user successfully.",
-                        data: groubedByTeam
+                        data: finalData
                     });
                 } else {
                     reject({
