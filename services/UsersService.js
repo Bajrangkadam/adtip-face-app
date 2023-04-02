@@ -480,7 +480,7 @@ module.exports = {
         if (userData.career) sql += ` career='${userData.career ? userData.career : ''}',`;
         if (userData.goals) sql += ` goals='${userData.goals ? userData.goals : ''}',`;
         if (userData.philanthropy) sql += ` philanthropy='${userData.philanthropy ? userData.philanthropy : ''}',`;
-        if (userData.personalLife) sql += ` personal_life='${userData.personal_life ? userData.personal_life : ''}',`;
+        if (userData.personalLife) sql += ` personal_life='${userData.personalLife ? userData.personalLife : ''}',`;
 
         if (userData.gender) sql += ` gender='${userData.gender ? userData.gender : ''}',`;
         if (userData.maritalStatus) sql += ` marital_status='${userData.maritalStatus ? userData.maritalStatus : ''}',`;
