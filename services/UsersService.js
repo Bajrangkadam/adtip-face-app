@@ -332,8 +332,8 @@ let dbDataMapping = result => {
             element.social_links = element.social_links ? JSON.parse(element.social_links) : [];
             element.achievements = element.achievements ? JSON.parse(element.achievements) : [];
             element.language = element.language ? JSON.parse(element.language) : [];
-            element.education=element.education ? JSON.parse(element.education) : [];
-            element.company=element.company ? JSON.parse(element.company) : [];
+            element.education = element.education ? JSON.parse(element.education) : [];
+            element.company = element.company ? JSON.parse(element.company) : [];
             element.photos = element.photos ? JSON.parse(JSON.stringify(element.photos)).split(',') : [];
         });
     }
@@ -484,7 +484,7 @@ module.exports = {
         if (userData.profession) sql += ` profession=${userData.profession ? userData.profession : ''},`;
         if (userData.overview) sql += ` overview='${userData.overview ? userData.overview : ''}',`;
         if (userData.hobbies) sql += ` hobbies='${userData.hobbies ? userData.hobbies : ''}',`;
-        if (userData.favourites) sql += ` favourites='${userData.favourites ? userData.favourites : ''}',`;      
+        if (userData.favourites) sql += ` favourites='${userData.favourites ? userData.favourites : ''}',`;
 
         if (userData.gender) sql += ` gender='${userData.gender ? userData.gender : ''}',`;
         if (userData.maritalStatus) sql += ` marital_status='${userData.maritalStatus ? userData.maritalStatus : ''}',`;
@@ -700,7 +700,7 @@ module.exports = {
     }),
 
     updateUserRequestStatus: userData => new Promise((resolve, reject) => {
-        let checkUserRequestExist=`select id from user_requests where created_by= ${userData.userId} and user_id=${userData.createdBy};`;
+        let checkUserRequestExist = `select id from user_requests where created_by= ${userData.userId} and user_id=${userData.createdBy};`;
         let sql = `UPDATE user_requests SET request_status=${userData.requestStatus}, updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30') where created_by= ${userData.userId} and user_id=${userData.createdBy};`;
         dbQuery.queryRunner(checkUserRequestExist)
             .then(result => {
@@ -812,20 +812,20 @@ module.exports = {
             });
     }),
 
-    getUserbyCategary: () => new Promise((resolve, reject) => {        
+    getUserbyCategary: () => new Promise((resolve, reject) => {
         let sql = `select u.*,p.name as professionName from users u INNER JOIN professions p on p.id=u.profession where u.is_active=1;`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
-                    let finalData=[];
+                    let finalData = [];
                     let updateResult = dbDataMapping(result);
-                    let categaryData=_.pluck(updateResult, 'professionName');
-                    categaryData=_.uniq(categaryData);
-                    if(categaryData && categaryData.length != 0){
+                    let categaryData = _.pluck(updateResult, 'professionName');
+                    categaryData = _.uniq(categaryData);
+                    if (categaryData && categaryData.length != 0) {
                         categaryData.forEach(element => {
-                            let usersData=_.filter(updateResult,user => user.professionName === element);
-                            let categaryObj={
-                                id:usersData && usersData.length !=0 ? usersData[0].profession : null,
+                            let usersData = _.filter(updateResult, user => user.professionName === element);
+                            let categaryObj = {
+                                id: usersData && usersData.length != 0 ? usersData[0].profession : null,
                                 name: element,
                                 users: usersData
                             }
@@ -1055,9 +1055,26 @@ module.exports = {
     userDetailsUpdate: userData => new Promise((resolve, reject) => {
         let sql = '';
 
-        if (userData.isSaveProfile) sql += `INSERT INTO user_details (user_id,is_save_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isSaveProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_save_profile='${userData.isSaveProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
-        if (userData.isLikeProfile) sql += `INSERT INTO user_details (user_id,is_like_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isLikeProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_like_profile='${userData.isLikeProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
-        if (userData.isViewProfile) sql += `INSERT INTO user_details (user_id,is_view_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isViewProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_view_profile='${userData.isViewProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
+        if (userData.isSaveProfile) {
+            sql += `INSERT INTO user_details (user_id,is_save_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isSaveProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_save_profile='${userData.isSaveProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
+            if (userData.isSaveProfile === '1')dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile + 1 where id=${userData.createdBy};`);
+            if (userData.isSaveProfile === '0')dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile - 1 where id=${userData.createdBy};`);
+        }
+        if (userData.isLikeProfile) {
+            sql += `INSERT INTO user_details (user_id,is_like_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isLikeProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_like_profile='${userData.isLikeProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
+            if (userData.isLikeProfile === '1')dbQuery.queryRunner(`update users set total_likes = total_likes + 1 where id=${userData.createdBy};`);
+            if (userData.isLikeProfile === '0')dbQuery.queryRunner(`update users set total_likes = total_likes - 1 where id=${userData.createdBy};`);
+        }
+        if (userData.isViewProfile) {
+            sql += `INSERT INTO user_details (user_id,is_view_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isViewProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_view_profile='${userData.isViewProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
+            if (userData.isViewProfile === '1')dbQuery.queryRunner(`update users set total_views = total_views + 1 where id=${userData.createdBy};`);
+            if (userData.isViewProfile === '0')dbQuery.queryRunner(`update users set total_views = total_views - 1 where id=${userData.createdBy};`);
+        }
+        if (userData.isRatingProfile) {
+            sql += `INSERT INTO user_details (user_id,is_rating_profile,rating,rating_message,created_by,created_date)VALUES(${userData.userId},'${userData.isRatingProfile}',${userData.rating},'${userData.ratingMessage}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_rating_profile='${userData.isRatingProfile}',rating=${userData.rating},rating_message='${userData.ratingMessage}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
+            if (userData.isRatingProfile === '1')dbQuery.queryRunner(`update users set total_rating = total_rating + 1 where id=${userData.createdBy};`);
+            if (userData.isRatingProfile === '0')dbQuery.queryRunner(`update users set total_rating = total_rating - 1 where id=${userData.createdBy};`);
+        }
 
         dbQuery.queryRunner(sql)
             .then(result => {
@@ -1117,6 +1134,38 @@ module.exports = {
         LEFT JOIN user_requests ur ON ur.user_id=u.id and ur.created_by=${userId}
         LEFT JOIN user_details ud ON ud.user_id=u.id and ud.is_save_profile=1 and ud.created_by=${userId}
         where u.is_active=1 and u.id != ${userId} order by u.created_date desc`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    let updateResult = dbDataMapping(result);
+                    resolve({
+                        status: 200,
+                        message: "Fetch users successfully.",
+                        data: updateResult
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "users not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    getUserDetails: (loginUserId,userId) => new Promise((resolve, reject) => {
+        let sql = `select u.* ,ur.request_status,ud.is_save_profile,ud.is_like_profile,ud.is_view_profile,ud.is_rating_profile,ud.rating,ud.rating_message
+        from users u
+        LEFT JOIN user_requests ur ON ur.user_id=${userId} and ur.created_by=${loginUserId}
+        LEFT JOIN user_details ud ON ud.user_id=${userId} and ud.created_by=${loginUserId}
+        where u.is_active=1 and u.id = ${userId} order by u.created_date desc`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
