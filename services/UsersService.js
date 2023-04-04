@@ -583,6 +583,84 @@ module.exports = {
             reject(err);
         })
     }),
+    getLanguages: () => new Promise((resolve, reject) => {
+        let sql = `select id,name from user_language where is_active=1`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "Fetch language successfully.",
+                        data: result
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "language not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+    saveLanguage: languageData => new Promise((resolve, reject) => {
+        let sql = `INSERT INTO user_language(name,is_active) VALUES ('${languageData.language}',0);`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "Language save successfully.",
+                        data: [languageData]
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "Language not save.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+    saveProfession: professionData => new Promise((resolve, reject) => {
+        let sql = `INSERT INTO professions(name,is_active) VALUES ('${professionData.profession}',0);`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "Profession save successfully.",
+                        data: [professionData]
+                    });
+                } else {
+                    reject({
+                        status: 400,
+                        message: "Profession not save.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
     getFamilyRelationMaster: () => new Promise((resolve, reject) => {
         return getFamilyRelationMaster().then(result => {
             if (result && result.status == 200) {

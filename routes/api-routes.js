@@ -14,7 +14,10 @@ router.post('/saveuserdetails', UsersController.saveUserDetails);
 router.post('/updateuser', UsersController.updateUser);
 router.get('/searchusers/:name', UsersController.getSearchUsers);
 router.get('/geteducation', UsersController.getEducations);
+router.get('/getlanguages', UsersController.getLanguages);
+router.post('/savelanguage', UsersController.saveLanguage);
 router.get('/getprofessions', UsersController.getProfessions);
+router.post('/saveprofession', UsersController.saveProfession);
 router.get('/getfamilyrelationmaster', UsersController.getFamilyRelationMaster);
 router.get('/getuserbyid/:id', UsersController.getUser);
 router.post('/userrequestsave', UsersController.userRequestSave);
@@ -33,6 +36,7 @@ router.post('/deletesendrequest', UsersController.deleteSendRequest);
 router.post('/userdetailsupdate', UsersController.userDetailsUpdate);
 router.get('/getsavedprofiles/:userid', UsersController.getSavedProfiles);
 router.get('/getallusers/:userid', UsersController.getAllusers);
+
 
 
 router.get('/termscondition', MasterController.getTermscondition);

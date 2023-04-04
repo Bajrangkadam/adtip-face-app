@@ -90,6 +90,47 @@ module.exports = {
                 });
             });
     },
+    getLanguages: (req, res, next) => {
+        userService.getLanguages()
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+    saveLanguage: (req, res, next) => {
+        if (!req.body) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.body });
+        userService.saveLanguage(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+    saveProfession: (req, res, next) => {
+        if (!req.body) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.body });
+        userService.saveProfession(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
     getProfessions: (req, res, next) => {
         userService.getProfessions()
             .then(result => {
@@ -130,6 +171,7 @@ module.exports = {
             });
     },
     getSendRequestByUserId: (req, res, next) => {
+        if (!req.params.userid) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.params });
         userService.getSendRequestByUserId(req.params.userid)
             .then(result => {
                 res.status(result.status || 200).send(result);
@@ -143,6 +185,7 @@ module.exports = {
             });
     },
     getRecievedRequestByUserId: (req, res, next) => {
+        if (!req.params.userid) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.params });
         userService.getRecievedRequestByUserId(req.params.userid)
             .then(result => {
                 res.status(result.status || 200).send(result);
@@ -238,6 +281,7 @@ module.exports = {
             });
     },
     checkUserName: (req, res, next) => {
+        if (!req.params.username) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.params });
         userService.checkUserName(req.params.username)
             .then(result => {
                 res.status(result.status || 200).send(result);
