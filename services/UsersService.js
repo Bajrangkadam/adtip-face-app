@@ -1191,5 +1191,31 @@ module.exports = {
                 });
             });
     }),
-
+    
+    saveUserDeviceToken: userData => new Promise((resolve, reject) => {
+        let sql = `update users set device_token='${userData.deviceToken}' where id=${userData.id}`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "user device token saved.",
+                        data: userData
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "user device token not save.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
 }

@@ -37,6 +37,8 @@ router.post('/userdetailsupdate', UsersController.userDetailsUpdate);
 router.get('/getsavedprofiles/:userid', UsersController.getSavedProfiles);
 router.get('/getallusers/:userid', UsersController.getAllusers);
 router.get('/getuserdetails/:loginid/:userid', UsersController.getUserDetails);
+router.post('/saveuserdevicetoken', UsersController.saveUserDeviceToken);
+
 
 
 
