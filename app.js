@@ -4,6 +4,7 @@ const helmet = require("helmet");
 const cors = require('cors');
 const routes = require('./routes/api-routes');
 const logger = require('./utils/logger');
+//const utils = require('./utils/utils');
 
 const app = express();
 const port = 7071
@@ -34,6 +35,8 @@ process.on("unhandledRejection", (e) => {
   logger.error(`unhandledRejection : ${e.message}`);
   console.log("unhandledRejection: " + e);
 });
+
+//utils.sendNotification("tet","tesr");
 
 app.get('/', (req, res) => res.send('Welcome !!'))
 
