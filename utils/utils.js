@@ -33,7 +33,12 @@ module.exports = {
         if (!req.body.id) return res.status(400).send({ status: 400, message: "Id not found.", data: [req.body] });
         next();
     },
-    sendNotification: (registrationToken, message) => new Promise((resolve, reject) => {
+    sendNotification: userData => new Promise((resolve, reject) => {
+        resolve({
+            status: 200,
+            message: "User notification send",
+            data: []
+        });
         //const  registrationToken = req.body.registrationToken
         //const message = req.body.message
         const options = {
@@ -41,15 +46,24 @@ module.exports = {
             timeToLive: 60 * 60 * 24
         };
 
-        admin.messaging().sendToDevice(registrationToken, message, options)
+        admin.messaging().sendToDevice(userData.registrationToken, userData.message, options)
             .then(response => {
-                resolve(response);
-                //res.status(200).send("Notification sent successfully"+response)
+                //resolve(response);
+                resolve({
+                    status: 200,
+                    message: "User notification send",
+                    data: [response]
+                });
 
             })
             .catch(error => {
                 console.log(error);
-                reject(error);
+                reject({
+                    status: 400,
+                    message: "User notification not send",
+                    data: [error]
+                });
+                //reject(error);
             });
 
     })

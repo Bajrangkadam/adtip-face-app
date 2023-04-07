@@ -1,5 +1,6 @@
 const _ = require('underscore');
 const utils = require('../utils/utils');
+const enums = require('../utils/enums');
 const dbQuery = require('../dbConfig/queryRunner');
 
 let updateOtpUser = userData => new Promise((resolve, reject) => {
@@ -340,6 +341,44 @@ let dbDataMapping = result => {
     return result;
 }
 
+let sendNotification = userData => new Promise((resolve, reject) => {
+    let notificationBody = '';
+    let userDetailsSQL = `select (select name from users where id=${userData.createdBy}) as username,(select device_token from users where id=${userData.userId}) as registrationToken`
+    return dbQuery.queryRunner(userDetailsSQL)
+        .then(result => {
+            if (result && result.length != 0 && result[0].registrationToken != null) {
+                notificationBody = { userId: userData.userId, notificationId: userData.enum, createdBy: userData.createdBy, title: enums.notification[userData.enum], message: `${result[0].username} ${enums.notification[userData.enum]}`, registrationToken: result[0].registrationToken };
+                return utils.sendNotification(notificationBody);
+            } else {
+                return reject({
+                    status: 400,
+                    message: "User request save but notification not send",
+                    data: [result]
+                });
+            }
+        }).then(result => {
+            if (result && result.status === 200) {
+                let notificationSql = `INSERT INTO notifications(user_id,title,notification_type,device_token,message,createdby,created_date)
+                 VALUES (${userData.userId},'${notificationBody.title}',${notificationBody.notificationId},'${notificationBody.registrationToken}','${notificationBody.message}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'));`;
+                return dbQuery.queryRunner(notificationSql);
+            } else {
+                reject(result);
+            }
+        }).then(result => {
+            if (result && result.length != 0) {
+                resolve({
+                    status: 200,
+                    message: "User request sent",
+                    data: [result]
+                });
+            } else {
+                reject(result);
+            }
+        }).catch(err => {
+            reject(err);
+        })
+});
+
 module.exports = {
     saveLoginOtp: userData => new Promise((resolve, reject) => {
         let status = 200;
@@ -377,7 +416,7 @@ module.exports = {
             })
             .catch(err => {
                 reject(err);
-            })
+            });
     }),
 
     otpVerify: userData => new Promise((resolve, reject) => {
@@ -676,6 +715,10 @@ module.exports = {
         let sql = `INSERT INTO user_requests(user_id,request_status,created_by,created_date) VALUES (${userData.userId},1,${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'));`;
         dbQuery.queryRunner(sql)
             .then(result => {
+                userData.enum = 1;
+                return sendNotification(userData);
+            })
+            .then(result => {
                 if (result && result.length != 0) {
                     resolve({
                         status: 200,
@@ -686,14 +729,17 @@ module.exports = {
                     reject({
                         status: 400,
                         message: "User request not save.",
-                        data: result
+                        data: [result]
                     });
                 }
             })
             .catch(err => {
+                let message = '', status = 400;
+                if (err.message.includes('ER_DUP_ENTRY')) message = 'Request already sent.';
+                status = err.status ? err.status : 400;
                 reject({
-                    status: 500,
-                    message: err,
+                    status: status ? status : 500,
+                    message: message != '' ? message : err.message,
                     data: []
                 });
             });
@@ -706,17 +752,32 @@ module.exports = {
             .then(result => {
                 if (result && result.length != 0) {
                     dbQuery.queryRunner(sql);
-                    resolve({
+                    return resolve({
                         status: 200,
                         message: "User request save successfully.",
                         data: [userData]
                     });
                 } else {
-                    resolve({
-                        status: 200,
+                    return reject({
+                        status: 400,
                         message: "User request not found.",
                         data: result
                     });
+                }
+            })
+            .then(result => {
+                if (condition) {
+                    userData.enum = userData.requestStatus;
+                    return sendNotification(userData);
+                } else {
+                    reject(result);
+                }
+            })
+            .then(result => {
+                if (result && result.status === 200) {
+                    resolve(result);
+                } else {
+                    reject(result);
                 }
             })
             .catch(err => {
@@ -1057,23 +1118,38 @@ module.exports = {
 
         if (userData.isSaveProfile) {
             sql += `INSERT INTO user_details (user_id,is_save_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isSaveProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_save_profile='${userData.isSaveProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
-            if (userData.isSaveProfile === '1')dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile + 1 where id=${userData.createdBy};`);
-            if (userData.isSaveProfile === '0')dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile - 1 where id=${userData.createdBy};`);
+            if (userData.isSaveProfile === '1') dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile + 1 where id=${userData.createdBy};`);
+            if (userData.isSaveProfile === '0') dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile - 1 where id=${userData.createdBy};`);
+            userData.enum = 5;
+            sendNotification(userData);
         }
         if (userData.isLikeProfile) {
             sql += `INSERT INTO user_details (user_id,is_like_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isLikeProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_like_profile='${userData.isLikeProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
-            if (userData.isLikeProfile === '1')dbQuery.queryRunner(`update users set total_likes = total_likes + 1 where id=${userData.createdBy};`);
-            if (userData.isLikeProfile === '0')dbQuery.queryRunner(`update users set total_likes = total_likes - 1 where id=${userData.createdBy};`);
+            if (userData.isLikeProfile === '1') {
+                dbQuery.queryRunner(`update users set total_likes = total_likes + 1 where id=${userData.createdBy};`);
+                userData.enum = 4;
+                sendNotification(userData);
+
+            }
+            if (userData.isLikeProfile === '0') dbQuery.queryRunner(`update users set total_likes = total_likes - 1 where id=${userData.createdBy};`);
+
         }
         if (userData.isViewProfile) {
             sql += `INSERT INTO user_details (user_id,is_view_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isViewProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_view_profile='${userData.isViewProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
-            if (userData.isViewProfile === '1')dbQuery.queryRunner(`update users set total_views = total_views + 1 where id=${userData.createdBy};`);
-            if (userData.isViewProfile === '0')dbQuery.queryRunner(`update users set total_views = total_views - 1 where id=${userData.createdBy};`);
+            if (userData.isViewProfile === '1') {
+                dbQuery.queryRunner(`update users set total_views = total_views + 1 where id=${userData.createdBy};`);
+                userData.enum = 3;
+                sendNotification(userData);
+            }
+            if (userData.isViewProfile === '0') dbQuery.queryRunner(`update users set total_views = total_views - 1 where id=${userData.createdBy};`);
+
         }
         if (userData.isRatingProfile) {
             sql += `INSERT INTO user_details (user_id,is_rating_profile,rating,rating_message,created_by,created_date)VALUES(${userData.userId},'${userData.isRatingProfile}',${userData.rating},'${userData.ratingMessage}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_rating_profile='${userData.isRatingProfile}',rating=${userData.rating},rating_message='${userData.ratingMessage}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
-            if (userData.isRatingProfile === '1')dbQuery.queryRunner(`update users set total_rating = total_rating + 1 where id=${userData.createdBy};`);
-            if (userData.isRatingProfile === '0')dbQuery.queryRunner(`update users set total_rating = total_rating - 1 where id=${userData.createdBy};`);
+            if (userData.isRatingProfile === '1') dbQuery.queryRunner(`update users set total_rating = total_rating + 1 where id=${userData.createdBy};`);
+            if (userData.isRatingProfile === '0') dbQuery.queryRunner(`update users set total_rating = total_rating - 1 where id=${userData.createdBy};`);
+            userData.enum = userData.isViewProfile;
+            sendNotification(userData);
         }
 
         dbQuery.queryRunner(sql)
@@ -1160,7 +1236,7 @@ module.exports = {
             });
     }),
 
-    getUserDetails: (loginUserId,userId) => new Promise((resolve, reject) => {
+    getUserDetails: (loginUserId, userId) => new Promise((resolve, reject) => {
         let sql = `select u.* ,ur.request_status,ud.is_save_profile,ud.is_like_profile,ud.is_view_profile,ud.is_rating_profile,ud.rating,ud.rating_message
         from users u
         LEFT JOIN user_requests ur ON ur.user_id=${userId} and ur.created_by=${loginUserId}
@@ -1191,7 +1267,7 @@ module.exports = {
                 });
             });
     }),
-    
+
     saveUserDeviceToken: userData => new Promise((resolve, reject) => {
         let sql = `update users set device_token='${userData.deviceToken}' where id=${userData.id}`;
         dbQuery.queryRunner(sql)
@@ -1206,6 +1282,68 @@ module.exports = {
                     resolve({
                         status: 200,
                         message: "user device token not save.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    getSentNotification: userId => new Promise((resolve, reject) => {
+        let sql = `select u.id, u.name,n.title,n.message,n.notification_type,n.created_date from users u
+        LEFT JOIN notifications n ON n.user_id=u.id  where u.is_active=1 and n.createdby=${userId} order by u.created_date desc`;
+
+        //LEFT JOIN user_details ud ON ud.user_id=u.id and ud.created_by=${userId}
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    //let updateResult = dbDataMapping(result);
+                    resolve({
+                        status: 200,
+                        message: "Fetch users notifications successfully.",
+                        data: result
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "Users notifications not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    getReceivedNotification: userId => new Promise((resolve, reject) => {
+        let sql = `select u.id, u.name,n.title,n.message,n.notification_type,n.created_date from users u
+        LEFT JOIN notifications n ON n.createdby=u.id where u.is_active=1 and n.user_id=${userId} order by u.created_date desc`;
+
+        //LEFT JOIN user_details ud ON ud.user_id=u.id and ud.created_by=${userId}
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    //let updateResult = dbDataMapping(result);
+                    resolve({
+                        status: 200,
+                        message: "Fetch users notifications successfully.",
+                        data: result
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "Users notifications not found.",
                         data: result
                     });
                 }

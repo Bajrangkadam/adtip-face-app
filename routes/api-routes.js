@@ -38,6 +38,8 @@ router.get('/getsavedprofiles/:userid', UsersController.getSavedProfiles);
 router.get('/getallusers/:userid', UsersController.getAllusers);
 router.get('/getuserdetails/:loginid/:userid', UsersController.getUserDetails);
 router.post('/saveuserdevicetoken', UsersController.saveUserDeviceToken);
+router.get('/getsentnotification/:userid', UsersController.getSentNotification);
+router.get('/getreceivednotification/:userid', UsersController.getReceivedNotification);
 
 
 
