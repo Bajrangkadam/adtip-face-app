@@ -1296,7 +1296,7 @@ module.exports = {
     }),
 
     getSentNotification: userId => new Promise((resolve, reject) => {
-        let sql = `select u.id, u.name,n.title,n.message,n.notification_type,n.created_date from users u
+        let sql = `select u.id, u.name, u.profile_image, n.title,n.message,n.notification_type,n.created_date,DATE_FORMAT(n.created_date,'%d/%m/%Y') AS formated_date from users u
         LEFT JOIN notifications n ON n.user_id=u.id  where u.is_active=1 and n.createdby=${userId} order by u.created_date desc`;
 
         //LEFT JOIN user_details ud ON ud.user_id=u.id and ud.created_by=${userId}
@@ -1304,6 +1304,7 @@ module.exports = {
             .then(result => {
                 if (result && result.length != 0) {
                     //let updateResult = dbDataMapping(result);
+                    result=_.groupBy(result, 'formated_date');
                     resolve({
                         status: 200,
                         message: "Fetch users notifications successfully.",
@@ -1327,7 +1328,7 @@ module.exports = {
     }),
 
     getReceivedNotification: userId => new Promise((resolve, reject) => {
-        let sql = `select u.id, u.name,n.title,n.message,n.notification_type,n.created_date from users u
+        let sql = `select u.id, u.name, u.profile_image, n.title,n.message,n.notification_type,n.created_date,n.created_date,DATE_FORMAT(n.created_date,'%d/%m/%Y') AS formated_date from users u
         LEFT JOIN notifications n ON n.createdby=u.id where u.is_active=1 and n.user_id=${userId} order by u.created_date desc`;
 
         //LEFT JOIN user_details ud ON ud.user_id=u.id and ud.created_by=${userId}
@@ -1335,6 +1336,7 @@ module.exports = {
             .then(result => {
                 if (result && result.length != 0) {
                     //let updateResult = dbDataMapping(result);
+                    result=_.groupBy(result, 'formated_date');
                     resolve({
                         status: 200,
                         message: "Fetch users notifications successfully.",
