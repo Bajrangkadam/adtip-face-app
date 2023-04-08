@@ -1303,12 +1303,25 @@ module.exports = {
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
+                    let finalData = [];
                     //let updateResult = dbDataMapping(result);
-                    result=_.groupBy(result, 'formated_date');
+                    //result=_.groupBy(result, 'formated_date');
+                    let categaryData = _.pluck(result, 'formated_date');
+                    categaryData = _.uniq(categaryData);
+                    if (categaryData && categaryData.length != 0) {
+                        categaryData.forEach(element => {
+                            let usersData = _.filter(result, user => user.formated_date === element);
+                            let categaryObj = {
+                                name: element,
+                                notification: usersData
+                            }
+                            finalData.push(categaryObj);
+                        });
+                    }
                     resolve({
                         status: 200,
                         message: "Fetch users notifications successfully.",
-                        data: result
+                        data: finalData
                     });
                 } else {
                     resolve({
@@ -1335,12 +1348,25 @@ module.exports = {
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
+                    let finalData = [];
                     //let updateResult = dbDataMapping(result);
-                    result=_.groupBy(result, 'formated_date');
+                    //result=_.groupBy(result, 'formated_date');
+                    let categaryData = _.pluck(result, 'formated_date');
+                    categaryData = _.uniq(categaryData);
+                    if (categaryData && categaryData.length != 0) {
+                        categaryData.forEach(element => {
+                            let usersData = _.filter(result, user => user.formated_date === element);
+                            let categaryObj = {
+                                name: element,
+                                notification: usersData
+                            }
+                            finalData.push(categaryObj);
+                        });
+                    }
                     resolve({
                         status: 200,
                         message: "Fetch users notifications successfully.",
-                        data: result
+                        data: finalData
                     });
                 } else {
                     resolve({
