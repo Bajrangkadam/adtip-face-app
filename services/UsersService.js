@@ -1118,15 +1118,15 @@ module.exports = {
 
         if (userData.isSaveProfile) {
             sql += `INSERT INTO user_details (user_id,is_save_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isSaveProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_save_profile='${userData.isSaveProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
-            if (userData.isSaveProfile === '1') dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile + 1 where id=${userData.createdBy};`);
-            if (userData.isSaveProfile === '0') dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile - 1 where id=${userData.createdBy};`);
+            if (userData.isSaveProfile === '1') dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile + 1 where id=${userData.userId};`);
+            if (userData.isSaveProfile === '0') dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile - 1 where id=${userData.userId};`);
             userData.enum = 5;
             sendNotification(userData);
         }
         if (userData.isLikeProfile) {
             sql += `INSERT INTO user_details (user_id,is_like_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isLikeProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_like_profile='${userData.isLikeProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
             if (userData.isLikeProfile === '1') {
-                dbQuery.queryRunner(`update users set total_likes = total_likes + 1 where id=${userData.createdBy};`);
+                dbQuery.queryRunner(`update users set total_likes = total_likes + 1 where id=${userData.userId};`);
                 userData.enum = 4;
                 sendNotification(userData);
 
@@ -1137,17 +1137,17 @@ module.exports = {
         if (userData.isViewProfile) {
             sql += `INSERT INTO user_details (user_id,is_view_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isViewProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_view_profile='${userData.isViewProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
             if (userData.isViewProfile === '1') {
-                dbQuery.queryRunner(`update users set total_views = total_views + 1 where id=${userData.createdBy};`);
+                dbQuery.queryRunner(`update users set total_views = total_views + 1 where id=${userData.userId};`);
                 userData.enum = 3;
                 sendNotification(userData);
             }
-            if (userData.isViewProfile === '0') dbQuery.queryRunner(`update users set total_views = total_views - 1 where id=${userData.createdBy};`);
+            if (userData.isViewProfile === '0') dbQuery.queryRunner(`update users set total_views = total_views - 1 where id=${userData.userId};`);
 
         }
         if (userData.isRatingProfile) {
             sql += `INSERT INTO user_details (user_id,is_rating_profile,rating,rating_message,created_by,created_date)VALUES(${userData.userId},'${userData.isRatingProfile}',${userData.rating},'${userData.ratingMessage}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_rating_profile='${userData.isRatingProfile}',rating=${userData.rating},rating_message='${userData.ratingMessage}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
-            if (userData.isRatingProfile === '1') dbQuery.queryRunner(`update users set total_rating = total_rating + 1 where id=${userData.createdBy};`);
-            if (userData.isRatingProfile === '0') dbQuery.queryRunner(`update users set total_rating = total_rating - 1 where id=${userData.createdBy};`);
+            if (userData.isRatingProfile === '1') dbQuery.queryRunner(`update users set total_rating = total_rating + 1 where id=${userData.userId};`);
+            if (userData.isRatingProfile === '0') dbQuery.queryRunner(`update users set total_rating = total_rating - 1 where id=${userData.userId};`);
             userData.enum = userData.isViewProfile;
             sendNotification(userData);
         }
