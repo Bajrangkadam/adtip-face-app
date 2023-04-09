@@ -1,7 +1,7 @@
-const { reject } = require("underscore");
-let config = require("../config/appconfig.json");
+const FCM = require('fcm-node');
 const request = require('request');
-const admin = require('./firebase-config');
+let config = require("../config/appconfig.json");
+const fcm = new FCM(config.fcmkey);
 module.exports = {
     sendOtp: (mobileNumber, otp) => new Promise((resolve, reject) => {
         let options = {
@@ -33,38 +33,38 @@ module.exports = {
         if (!req.body.id) return res.status(400).send({ status: 400, message: "Id not found.", data: [req.body] });
         next();
     },
-    sendNotification: userData => new Promise((resolve, reject) => {
-        resolve({
-            status: 200,
-            message: "User notification send",
-            data: []
-        });
-        //const  registrationToken = req.body.registrationToken
-        //const message = req.body.message
-        const options = {
-            priority: "high",
-            timeToLive: 60 * 60 * 24
+    sendFcmNotification: userData => new Promise((resolve, reject) => {
+        // const options = {
+        //     priority: "high",
+        //     timeToLive: 60 * 60 * 24
+        // };
+        let message = {
+            //to: 'erI8cmj4TrSaTwkFMgxv6N:APA91bG-c_fdSWN3CTmBZG1a9oZr2_o4aPHuczglHRWNLOgALQhZtqRRYLiVqOPIY90BHcky6BwcwJDo3sK5wc1l2t0XHhWUSajpoVVUdeok9ZeC7CxTgbykvSVapbhOHeLDnPKPtQGi',
+            to: userData.registrationToken,
+            notification: {
+                title: userData.title,
+                body: userData.message
+            },        
+            data: { //you can send only notification or only data(or include both)
+                title: userData.title,
+                body: JSON.stringify(userData)
+            }        
         };
-
-        admin.messaging().sendToDevice(userData.registrationToken, userData.message, options)
-            .then(response => {
-                //resolve(response);
+        fcm.send(message, function (err, response) {
+            if (err) {
+                console.log("Something has gone wrong!" + err);
+                console.log("Respponse:! " + response);
+                reject(err);
+            } else {
+                // showToast("Successfully sent with response");
+                console.log("Successfully sent with response: ", response);
                 resolve({
                     status: 200,
-                    message: "User notification send",
-                    data: [response]
+                    message: "User notification sent.",
+                    data: response
                 });
-
-            })
-            .catch(error => {
-                console.log(error);
-                reject({
-                    status: 400,
-                    message: "User notification not send",
-                    data: [error]
-                });
-                //reject(error);
-            });
-
+            }
+        
+        });
     })
 }

@@ -343,12 +343,12 @@ let dbDataMapping = result => {
 
 let sendNotification = userData => new Promise((resolve, reject) => {
     let notificationBody = '';
-    let userDetailsSQL = `select (select name from users where id=${userData.createdBy}) as username,(select device_token from users where id=${userData.userId}) as registrationToken`
+    let userDetailsSQL = `select (select profile_image from users where id=${userData.createdBy}) as profileImage,(select name from users where id=${userData.createdBy}) as username,(select device_token from users where id=${userData.userId}) as registrationToken`
     return dbQuery.queryRunner(userDetailsSQL)
         .then(result => {
             if (result && result.length != 0 && result[0].registrationToken != null) {
-                notificationBody = { userId: userData.userId, notificationId: userData.enum, createdBy: userData.createdBy, title: enums.notification[userData.enum], message: `${result[0].username} ${enums.notification[userData.enum]}`, registrationToken: result[0].registrationToken };
-                return utils.sendNotification(notificationBody);
+                notificationBody = { userId: userData.userId, profileImage: result[0].profileImage, notificationId: userData.enum, createdBy: userData.createdBy, title: enums.notification[userData.enum], message: `${result[0].username} ${enums.notification[userData.enum]}`, registrationToken: result[0].registrationToken };
+                return utils.sendFcmNotification(notificationBody);
             } else {
                 return reject({
                     status: 400,
@@ -358,8 +358,7 @@ let sendNotification = userData => new Promise((resolve, reject) => {
             }
         }).then(result => {
             if (result && result.status === 200) {
-                let notificationSql = `INSERT INTO notifications(user_id,title,notification_type,device_token,message,createdby,created_date)
-                 VALUES (${userData.userId},'${notificationBody.title}',${notificationBody.notificationId},'${notificationBody.registrationToken}','${notificationBody.message}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'));`;
+                let notificationSql = `INSERT INTO notifications(user_id,title,notification_type,device_token,message,fcm_response,is_active,createdby,created_date) VALUES (${userData.userId},'${notificationBody.title}',${notificationBody.notificationId},'${notificationBody.registrationToken}','${notificationBody.message}','${JSON.stringify(result.data)}',1,${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'));`;
                 return dbQuery.queryRunner(notificationSql);
             } else {
                 reject(result);
@@ -368,13 +367,16 @@ let sendNotification = userData => new Promise((resolve, reject) => {
             if (result && result.length != 0) {
                 resolve({
                     status: 200,
-                    message: "User request sent",
+                    message: "User view request sent",
                     data: [result]
                 });
             } else {
                 reject(result);
             }
         }).catch(err => {
+            let notificationSql = `INSERT INTO notifications(user_id,title,notification_type,device_token,message,fcm_response,is_active,createdby,created_date) 
+            VALUES (${userData.userId},'${notificationBody.title}',${notificationBody.notificationId},'${notificationBody.registrationToken}','${notificationBody.message}','${JSON.stringify(err)}',0,${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'));`;
+            dbQuery.queryRunner(notificationSql);
             reject(err);
         })
 });
@@ -1121,14 +1123,14 @@ module.exports = {
             if (userData.isSaveProfile === '1') dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile + 1 where id=${userData.userId};`);
             if (userData.isSaveProfile === '0') dbQuery.queryRunner(`update users set toatl_saved_profile = toatl_saved_profile - 1 where id=${userData.userId};`);
             userData.enum = 5;
-            sendNotification(userData);
+            //sendNotification(userData);
         }
         if (userData.isLikeProfile) {
             sql += `INSERT INTO user_details (user_id,is_like_profile,created_by,created_date) VALUES(${userData.userId},'${userData.isLikeProfile}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_like_profile='${userData.isLikeProfile}', updated_date=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
             if (userData.isLikeProfile === '1') {
                 dbQuery.queryRunner(`update users set total_likes = total_likes + 1 where id=${userData.userId};`);
                 userData.enum = 4;
-                sendNotification(userData);
+                //sendNotification(userData);
 
             }
             if (userData.isLikeProfile === '0') dbQuery.queryRunner(`update users set total_likes = total_likes - 1 where id=${userData.createdBy};`);
@@ -1149,7 +1151,7 @@ module.exports = {
             if (userData.isRatingProfile === '1') dbQuery.queryRunner(`update users set total_rating = total_rating + 1 where id=${userData.userId};`);
             if (userData.isRatingProfile === '0') dbQuery.queryRunner(`update users set total_rating = total_rating - 1 where id=${userData.userId};`);
             userData.enum = userData.isViewProfile;
-            sendNotification(userData);
+            // sendNotification(userData);
         }
 
         dbQuery.queryRunner(sql)
@@ -1297,7 +1299,7 @@ module.exports = {
 
     getSentNotification: userId => new Promise((resolve, reject) => {
         let sql = `select u.id, u.name, u.profile_image, n.title,n.message,n.notification_type,n.created_date,DATE_FORMAT(n.created_date,'%d/%m/%Y') AS formated_date from users u
-        LEFT JOIN notifications n ON n.user_id=u.id  where u.is_active=1 and n.createdby=${userId} order by u.created_date desc`;
+        LEFT JOIN notifications n ON n.user_id=u.id  where u.is_active=1 and n.createdby=${userId} and n.is_active=1 order by u.created_date desc`;
 
         //LEFT JOIN user_details ud ON ud.user_id=u.id and ud.created_by=${userId}
         dbQuery.queryRunner(sql)
@@ -1342,7 +1344,7 @@ module.exports = {
 
     getReceivedNotification: userId => new Promise((resolve, reject) => {
         let sql = `select u.id, u.name, u.profile_image, n.title,n.message,n.notification_type,n.created_date,n.created_date,DATE_FORMAT(n.created_date,'%d/%m/%Y') AS formated_date from users u
-        LEFT JOIN notifications n ON n.createdby=u.id where u.is_active=1 and n.user_id=${userId} order by u.created_date desc`;
+        LEFT JOIN notifications n ON n.createdby=u.id where u.is_active=1 and n.user_id=${userId} and n.is_active=1 order by u.created_date desc`;
 
         //LEFT JOIN user_details ud ON ud.user_id=u.id and ud.created_by=${userId}
         dbQuery.queryRunner(sql)

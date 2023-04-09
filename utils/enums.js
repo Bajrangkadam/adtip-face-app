@@ -1,8 +1,8 @@
 module.exports.notification = {
-    0: 'reject friend request',
-    1: 'send friend request',
-    2: 'accept friend request',
-    3: 'view profile',
-    4: 'like profile',
-    5: 'save profile'
+    0: 'reject view profile request',
+    1: 'send view profile request',
+    2: 'accept view profile request',
+    3: 'seen your profile',
+    4: 'liked your profile',
+    5: 'saved your profile'
   }
