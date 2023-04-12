@@ -36,6 +36,87 @@ module.exports = {
                 });
             });
     },
+    deletemessages: (req, res, next) => {
+        userService.deletemessages(req.body.id)
+            .then(result => {
+                if (result && result.status === 200 ) {
+                    res.status(result.status || 200).send(result);
+                } else {
+                    res.status(result.status || 400).send(result);
+                }
+                
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+    saveticks: (req, res, next) => {
+        userService.saveticks(req.body)
+            .then(result => {
+                if (result && result.status === 200 ) {
+                    res.status(result.status || 200).send(result);
+                } else {
+                    res.status(result.status || 400).send(result);
+                }
+                
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+    updateBlockUser: (req, res, next) => {
+        userService.updateBlockUser(req.body)
+            .then(result => {
+                if (result && result.status === 200 ) {
+                    res.status(result.status || 200).send(result);
+                } else {
+                    res.status(result.status || 400).send(result);
+                }
+                
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
+savemessages: (req, res, next) => {
+        userService.savemessages(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+    savechat: (req, res, next) => {
+        userService.savechat(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
     updateUser: (req, res, next) => {
         if (!req.body.id) return res.status(400).send({ status: 400, message: "Invalid request.", data: [] });
         userService.updateUser(req.body)

@@ -326,6 +326,71 @@ let getFamilyRelationMaster = () => new Promise((resolve, reject) => {
             });
         });
 });
+let savemessages = userData => new Promise((resolve, reject) => {
+    let sql = `INSERT INTO user_chat (message,sender,receiver,parent_id,is_seen,is_active,createdby,createddate)
+         VALUE ('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId},0,1,${userData.userId}, now())`;
+    dbQuery.queryRunner(sql)
+        .then(result => {
+            if (result && result.length != 0) {
+                userData.id = result.insertId;
+                resolve({
+                    status: 200,
+                    message: "User chat added successfully.",
+                    data: [userData]
+                });
+            } else {
+                reject({
+                    status: 400,
+                    message: "User chat not saved.",
+                    data: result
+                });
+            }
+        })
+        .catch(err => {
+            let message = '';
+            if (err.message.includes('ER_DUP_ENTRY')) message = 'Product already available.';
+            if (err.message.includes('ER_NO_REFERENCED_ROW_2')) message = 'Invalid userId.';
+            reject({
+                status: 500,
+                message: message != '' ? message : err.message,
+                data: []
+            });
+        });
+
+});
+
+let savechat = userData => new Promise((resolve, reject) => {
+    let sql = `INSERT INTO user_chat (name,is_active,createdby,createddate)
+         VALUE ('${userData.name}',1,${userData.userId}, now())`;
+    dbQuery.queryRunner(sql)
+        .then(result => {
+            if (result && result.length != 0) {
+                userData.id = result.insertId;
+                resolve({
+                    status: 200,
+                    message: "User chat added successfully.",
+                    data: [userData]
+                });
+            } else {
+                reject({
+                    status: 400,
+                    message: "User chat not saved.",
+                    data: result
+                });
+            }
+        })
+        .catch(err => {
+            let message = '';
+            if (err.message.includes('ER_DUP_ENTRY')) message = 'Product already available.';
+            if (err.message.includes('ER_NO_REFERENCED_ROW_2')) message = 'Invalid userId.';
+            reject({
+                status: 500,
+                message: message != '' ? message : err.message,
+                data: []
+            });
+        });
+
+});
 
 let dbDataMapping = result => {
     if (result && result.length != 0) {
@@ -340,6 +405,152 @@ let dbDataMapping = result => {
     }
     return result;
 }
+let getMessage = (id) => new Promise((resolve, reject) => {
+    let sql = `select * from user_chat where id=${id} and is_active=1;`;
+    dbQuery.queryRunner(sql)
+        .then(result => {
+            if (result && result.length != 0) {
+                resolve({
+                    status: 200,
+                    message: "Fetch data successfully.",
+                    data: result
+                });
+            } else {
+                resolve({
+                    status: 200,
+                    message: "Message not found.",
+                    data: result
+                });
+            }
+        })
+        .catch(err => {
+            reject({
+                status: 500,
+                message: err,
+                data: []
+            });
+        });
+});
+let getUser = (id) => new Promise((resolve, reject) => {
+    let sql = `select * from user_chat where id=${id} and is_active=1;`;
+    dbQuery.queryRunner(sql)
+        .then(result => {
+            if (result && result.length != 0) {
+                resolve({
+                    status: 200,
+                    message: "Fetch data successfully.",
+                    data: result
+                });
+            } else {
+                resolve({
+                    status: 200,
+                    message: "Message not found.",
+                    data: result
+                });
+            }
+        })
+        .catch(err => {
+            reject({
+                status: 500,
+                message: err,
+                data: []
+            });
+        });
+});
+let deletemessages = id => new Promise((resolve, reject) => {
+    let sql = `update user_chat set is_active=0,updateddate=now() where id=${id}`;
+    dbQuery.queryRunner(sql)
+        .then(result => {
+            if (result && result.length != 0) {
+                resolve({
+                    status: 200,
+                    message: "Delete message successfully.",
+                    data: []
+                });
+            } else {
+                reject({
+                    status: 400,
+                    message: "Message not deleted.",
+                    data: result
+                });
+            }
+        })
+        .catch(err => {
+            let message = '';
+            if (err.message.includes('ER_DUP_ENTRY')) message = 'Duplicate company not allowed.';
+            if (err.message.includes('ER_NO_REFERENCED_ROW_2')) message = 'Invalid id.';
+            reject({
+                status: 500,
+                message: message != '' ? message : err.message,
+                data: []
+            });
+        });
+});
+
+let updateTicks = userData => new Promise((resolve, reject) => {
+    let sql = `update user_chat set is_seen=${userData.isSeen},updateddate=now() where id=${userData.id}`;
+    dbQuery.queryRunner(sql)
+        .then(result => {
+            if (result && result.length != 0) {
+                resolve({
+                    status: 200,
+                    message: "Status of seen updated successfully.",
+                    data: []
+                });
+            } else {
+                reject({
+                    status: 400,
+                    message: "Not yet seen.",
+                    data: result
+                });
+            }
+        })
+        .catch(err => {
+            let message = '';
+            if (err.message.includes('ER_DUP_ENTRY')) message = 'Duplicate company not allowed.';
+            if (err.message.includes('ER_NO_REFERENCED_ROW_2')) message = 'Invalid id.';
+            reject({
+                status: 500,
+                message: message != '' ? message : err.message,
+                data: []
+            });
+        });
+});
+
+let updateBlockUser= userData => new Promise((resolve, reject) => {
+    let sql = '';
+
+    if (userData.isBlock) {
+        sql += `INSERT INTO user_chat_details (user_id,is_block,createdby,createddate) VALUES(${userData.userId},'${userData.isBlock}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_block='${userData.isBlock}', updateddate=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
+        }
+    if (userData.isMute) {
+        sql += `INSERT INTO user_chat_details (user_id,is_mute,createdby,createddate) VALUES(${userData.userId},'${userData.isMute}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_mute='${userData.isMute}', updateddate=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
+    }
+   
+    dbQuery.queryRunner(sql)
+        .then(result => {
+            if (result && result.length != 0) {
+                resolve({
+                    status: 200,
+                    message: "User data update successfully.",
+                    data: [userData]
+                });
+            } else {
+                reject({
+                    status: 400,
+                    message: "User data not saved.",
+                    data: result
+                });
+            }
+        })
+        .catch(err => {
+            reject({
+                status: 500,
+                message: err,
+                data: []
+            });
+        });
+});
 
 let sendNotification = userData => new Promise((resolve, reject) => {
     let notificationBody = '';
@@ -495,6 +706,88 @@ module.exports = {
                 reject(err);
             })
     }),
+    savemessages: userData => new Promise((resolve, reject) => {
+        savemessages(userData)
+            .then(result => {
+                if (result && result.status == 200) {
+                    resolve(result);
+                } else {
+                    reject(result);
+                }
+
+            }).catch(err => {
+                reject(err);
+            })
+    }),
+    savechat: userData => new Promise((resolve, reject) => {
+        savechat(userData)
+            .then(result => {
+                if (result && result.status == 200) {
+                    resolve(result);
+                } else {
+                    reject(result);
+                }
+
+            }).catch(err => {
+                reject(err);
+            })
+    }),
+    deletemessages: id => new Promise((resolve, reject) => {
+        return getMessage(id)
+            .then(result => {
+                if (result && result.status == 200) {
+                    return deletemessages(id);
+                } else {
+                    reject(result);
+                }
+            })
+            .then(result => {
+                if (result && result.status == 200) {
+                    resolve(result);
+                } else {
+                    reject(result);
+                }
+            })
+            .catch(err => {
+                reject(err);
+            })
+    }),
+    saveticks: userData => new Promise((resolve, reject) => {
+        return getMessage(userData.id)
+            .then(result => {
+                if (result && result.status == 200) {
+                    return updateTicks(userData);
+                } else {
+                    reject(result);
+                }
+            })
+            .then(result => {
+                if (result && result.status == 200) {
+                    resolve(result);
+                } else {
+                    reject(result);
+                }
+            })
+            .catch(err => {
+                reject(err);
+            })
+    }),
+   
+    updateBlockUser: userData => new Promise((resolve, reject) => {
+        return  updateBlockUser(userData)
+            .then(result => {
+                if (result && result.status == 200) {
+                    resolve(result);
+                } else {
+                    reject(result);
+                }
+            })
+            .catch(err => {
+                reject(err);
+            })
+    }),
+   
+   
 
     getUser: id => new Promise((resolve, reject) => {
         if (!id) res.status(400).send({ status: 400, message: 'Invalid Id', data: [] });
