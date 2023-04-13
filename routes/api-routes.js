@@ -41,11 +41,12 @@ router.post('/saveuserdevicetoken', UsersController.saveUserDeviceToken);
 router.get('/getsentnotification/:userid', UsersController.getSentNotification);
 router.get('/getreceivednotification/:userid', UsersController.getReceivedNotification);
 /** Message APIS */
-router.post('/savemessages', UsersController.savemessages);
+router.post('/sendmessage', UsersController.sendmessage);
 router.post('/deletemessages', UsersController.deletemessages);
 router.post('/savechat', UsersController.savechat);
 router.post('/saveticks', UsersController.saveticks);
 router.post('/updatechatuser', UsersController.updateBlockUser);
+router.get('/getmessages/userid', UsersController.getMessages);
 
 
 

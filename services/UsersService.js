@@ -326,38 +326,6 @@ let getFamilyRelationMaster = () => new Promise((resolve, reject) => {
             });
         });
 });
-let savemessages = userData => new Promise((resolve, reject) => {
-    let sql = `INSERT INTO user_chat (message,sender,receiver,parent_id,is_seen,is_active,createdby,createddate)
-         VALUE ('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId},0,1,${userData.userId}, now())`;
-    dbQuery.queryRunner(sql)
-        .then(result => {
-            if (result && result.length != 0) {
-                userData.id = result.insertId;
-                resolve({
-                    status: 200,
-                    message: "User chat added successfully.",
-                    data: [userData]
-                });
-            } else {
-                reject({
-                    status: 400,
-                    message: "User chat not saved.",
-                    data: result
-                });
-            }
-        })
-        .catch(err => {
-            let message = '';
-            if (err.message.includes('ER_DUP_ENTRY')) message = 'Product already available.';
-            if (err.message.includes('ER_NO_REFERENCED_ROW_2')) message = 'Invalid userId.';
-            reject({
-                status: 500,
-                message: message != '' ? message : err.message,
-                data: []
-            });
-        });
-
-});
 
 let savechat = userData => new Promise((resolve, reject) => {
     let sql = `INSERT INTO user_chat (name,is_active,createdby,createddate)
@@ -517,16 +485,15 @@ let updateTicks = userData => new Promise((resolve, reject) => {
         });
 });
 
-let updateBlockUser= userData => new Promise((resolve, reject) => {
-    let sql = '';
-
+let updateBlockUser = userData => new Promise((resolve, reject) => {
+    let sql = ''
     if (userData.isBlock) {
         sql += `INSERT INTO user_chat_details (user_id,is_block,createdby,createddate) VALUES(${userData.userId},'${userData.isBlock}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_block='${userData.isBlock}', updateddate=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
-        }
+    }
     if (userData.isMute) {
         sql += `INSERT INTO user_chat_details (user_id,is_mute,createdby,createddate) VALUES(${userData.userId},'${userData.isMute}',${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30')) ON DUPLICATE KEY UPDATE is_mute='${userData.isMute}', updateddate=CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30');`;
     }
-   
+
     dbQuery.queryRunner(sql)
         .then(result => {
             if (result && result.length != 0) {
@@ -579,6 +546,46 @@ let sendNotification = userData => new Promise((resolve, reject) => {
                 resolve({
                     status: 200,
                     message: "User view request sent",
+                    data: [result]
+                });
+            } else {
+                reject(result);
+            }
+        }).catch(err => {
+            let notificationSql = `INSERT INTO notifications(user_id,title,notification_type,device_token,message,fcm_response,is_active,createdby,created_date) 
+            VALUES (${userData.userId},'${notificationBody.title}',${notificationBody.notificationId},'${notificationBody.registrationToken}','${notificationBody.message}','${JSON.stringify(err)}',0,${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'));`;
+            dbQuery.queryRunner(notificationSql);
+            reject(err);
+        })
+});
+
+let smsNotification = userData => new Promise((resolve, reject) => {
+    let notificationBody = '';
+    let userDetailsSQL = `select (select profile_image from users where id=${userData.createdBy}) as profileImage,(select name from users where id=${userData.createdBy}) as username,(select device_token from users where id=${userData.userId}) as registrationToken`
+    return dbQuery.queryRunner(userDetailsSQL)
+        .then(result => {
+            if (result && result.length != 0 && result[0].registrationToken != null) {
+                notificationBody = { userId: userData.userId, profileImage: result[0].profileImage, notificationId: userData.enum, createdBy: userData.createdBy, title: enums.notification[userData.enum], message: `${result[0].username} ${enums.notification[userData.enum]}`, registrationToken: result[0].registrationToken };
+                return utils.sendFcmNotification(notificationBody);
+            } else {
+                return reject({
+                    status: 400,
+                    message: "Message not send",
+                    data: [result]
+                });
+            }
+        }).then(result => {
+            if (result && result.status === 200) {
+                let notificationSql = `INSERT INTO notifications(user_id,title,notification_type,device_token,message,fcm_response,is_active,createdby,created_date) VALUES (${userData.userId},'${notificationBody.title}',${notificationBody.notificationId},'${notificationBody.registrationToken}','${notificationBody.message}','${JSON.stringify(result.data)}',1,${userData.createdBy},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'));`;
+                return dbQuery.queryRunner(notificationSql);
+            } else {
+                reject(result);
+            }
+        }).then(result => {
+            if (result && result.length != 0) {
+                resolve({
+                    status: 200,
+                    message: "Message send",
                     data: [result]
                 });
             } else {
@@ -707,17 +714,38 @@ module.exports = {
             })
     }),
     savemessages: userData => new Promise((resolve, reject) => {
-        savemessages(userData)
+        let sql = `INSERT INTO user_chat (message,sender,receiver,parent_id,is_seen,is_active,createdby,createddate)
+             VALUE ('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId},0,1,${userData.userId}, now())`;
+        dbQuery.queryRunner(sql)
             .then(result => {
-                if (result && result.status == 200) {
-                    resolve(result);
+                if (result && result.length != 0) {
+                    userData.enum = 6;
+                    smsNotification(userData)
+                    userData.id = result.insertId;
+                    resolve({
+                        status: 200,
+                        message: "Send message successfully.",
+                        data: [userData]
+                    });
                 } else {
-                    reject(result);
+                    reject({
+                        status: 400,
+                        message: "Message not send.",
+                        data: result
+                    });
                 }
-
-            }).catch(err => {
-                reject(err);
             })
+            .catch(err => {
+                let message = '';
+                if (err.message.includes('ER_DUP_ENTRY')) message = 'Product already available.';
+                if (err.message.includes('ER_NO_REFERENCED_ROW_2')) message = 'Invalid userId.';
+                reject({
+                    status: 500,
+                    message: message != '' ? message : err.message,
+                    data: []
+                });
+            });
+
     }),
     savechat: userData => new Promise((resolve, reject) => {
         savechat(userData)
@@ -752,6 +780,36 @@ module.exports = {
                 reject(err);
             })
     }),
+
+    getMessages: userId => new Promise((resolve, reject) => {
+        let sql = `select u.name as senderName, u.profile_image as senderNameProfileImage, u1.name as receiver,
+        u1.profile_image as receiverProfileImage, uc.id message_id,uc.message, uc.parent_id,uc.is_seen,uc.is_like,uc.createddate from user_chat uc
+        INNER JOIN users u ON uc.sender=u.id INNER JOIN users u1 ON uc.receiver=u1.id where uc.sender=${userId}`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "Fetch data successfully.",
+                        data: result
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "Message not found.",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
     saveticks: userData => new Promise((resolve, reject) => {
         return getMessage(userData.id)
             .then(result => {
@@ -772,9 +830,9 @@ module.exports = {
                 reject(err);
             })
     }),
-   
+
     updateBlockUser: userData => new Promise((resolve, reject) => {
-        return  updateBlockUser(userData)
+        return updateBlockUser(userData)
             .then(result => {
                 if (result && result.status == 200) {
                     resolve(result);
@@ -786,9 +844,6 @@ module.exports = {
                 reject(err);
             })
     }),
-   
-   
-
     getUser: id => new Promise((resolve, reject) => {
         if (!id) res.status(400).send({ status: 400, message: 'Invalid Id', data: [] });
         return getUserById(id).then(result => {

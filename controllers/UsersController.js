@@ -39,12 +39,7 @@ module.exports = {
     deletemessages: (req, res, next) => {
         userService.deletemessages(req.body.id)
             .then(result => {
-                if (result && result.status === 200 ) {
-                    res.status(result.status || 200).send(result);
-                } else {
-                    res.status(result.status || 400).send(result);
-                }
-                
+                res.status(result.status || 200).send(result);                
             })
             .catch(err => {
                 res.status(err.status || 500).send({
@@ -57,12 +52,7 @@ module.exports = {
     saveticks: (req, res, next) => {
         userService.saveticks(req.body)
             .then(result => {
-                if (result && result.status === 200 ) {
-                    res.status(result.status || 200).send(result);
-                } else {
-                    res.status(result.status || 400).send(result);
-                }
-                
+                res.status(result.status || 200).send(result);
             })
             .catch(err => {
                 res.status(err.status || 500).send({
@@ -75,12 +65,7 @@ module.exports = {
     updateBlockUser: (req, res, next) => {
         userService.updateBlockUser(req.body)
             .then(result => {
-                if (result && result.status === 200 ) {
-                    res.status(result.status || 200).send(result);
-                } else {
-                    res.status(result.status || 400).send(result);
-                }
-                
+                res.status(result.status || 200).send(result);
             })
             .catch(err => {
                 res.status(err.status || 500).send({
@@ -91,7 +76,22 @@ module.exports = {
             });
     },
 
-savemessages: (req, res, next) => {
+    getMessages: (req, res, next) => {
+        if (!req.params.userid)return res.status(400).send({ status: 400, message: 'Invalid data', data:req.params });
+        userService.getMessages(req.params.userid)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+
+    sendmessage: (req, res, next) => {
         userService.savemessages(req.body)
             .then(result => {
                 res.status(result.status || 200).send(result);
