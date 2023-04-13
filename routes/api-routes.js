@@ -46,7 +46,7 @@ router.post('/deletemessages', UsersController.deletemessages);
 router.post('/savechat', UsersController.savechat);
 router.post('/saveticks', UsersController.saveticks);
 router.post('/updatechatuser', UsersController.updateBlockUser);
-router.get('/getmessages/userid', UsersController.getMessages);
+router.get('/getmessages/:userid', UsersController.getMessages);
 
 
 
