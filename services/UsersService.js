@@ -782,16 +782,90 @@ module.exports = {
     }),
 
     getMessages: userId => new Promise((resolve, reject) => {
-        let sql = `select u.name as senderName, u.profile_image as senderNameProfileImage, u1.name as receiver,
-        u1.profile_image as receiverProfileImage, uc.id message_id,uc.message, uc.parent_id,uc.is_seen,uc.is_like,uc.createddate from user_chat uc
-        INNER JOIN users u ON uc.sender=u.id INNER JOIN users u1 ON uc.receiver=u1.id where uc.sender=${userId}`;
+        // let sql = `select u.name as senderName, u.profile_image as senderNameProfileImage, u1.name as receiver,
+        // u1.profile_image as receiverProfileImage, uc.id message_id,uc.message, uc.parent_id,uc.is_seen,uc.is_like,uc.createddate from user_chat uc
+        // INNER JOIN users u ON uc.sender=u.id INNER JOIN users u1 ON uc.receiver=u1.id where uc.sender=${userId}`;
+        let messageData='';
+        let sql = `call latest_message_byuser(${userId})`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    messageData=result[0];
+                    let userData=_.pluck(result[0],'receiver');
+                    let userSql=`select id,profile_image from users where id in (${userData.toString()});`;
+                    return dbQuery.queryRunner(userSql);
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "Message not found.",
+                        data: result
+                    });
+                }
+            })
+            .then(result =>{
+                if (result && result.length != 0) {
+                    messageData.forEach(message => {
+                        result.forEach(user => {
+                            if(message && message.receiver == user.id) message.profile_image=user.profile_image;
+                        });                        
+                    });
+                resolve({
+                    status: 200,
+                    message: "Fetch data successfully.",
+                    data: messageData
+                });
+            }else{
+                resolve(result);
+            }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    getMessage: usersData => new Promise((resolve, reject) => {
+        // let sql = `select u.name as senderName, u.profile_image as senderNameProfileImage, u1.name as receiver,
+        // u1.profile_image as receiverProfileImage, uc.id message_id,uc.message, uc.parent_id,uc.is_seen,uc.is_like,uc.createddate from user_chat uc
+        // INNER JOIN users u ON uc.sender=u.id INNER JOIN users u1 ON uc.receiver=u1.id where uc.sender=${userId}`;
+        let sql = `call getmessagesbysenderandreceiver(${usersData.loginuserid},${usersData.chattinguserid})`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
                     resolve({
                         status: 200,
                         message: "Fetch data successfully.",
+                        data: result[0]
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "Message not found.",
                         data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    getMuteAndBlockUsers: userId => new Promise((resolve, reject) => {
+        let sql = `call getmuteandblockusers(${userId})`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "Fetch data successfully.",
+                        data: result[0]
                     });
                 } else {
                     resolve({

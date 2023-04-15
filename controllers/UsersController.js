@@ -90,6 +90,34 @@ module.exports = {
                 });
             });
     },
+    getMessage: (req, res, next) => {
+        if (!req.params.loginuserid && req.params.chattinguserid)return res.status(400).send({ status: 400, message: 'Invalid data', data:req.params });
+        userService.getMessage(req.params)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
+    getMuteAndBlockUsers: (req, res, next) => {
+        if (!req.params.userid)return res.status(400).send({ status: 400, message: 'Invalid data', data:req.params });
+        userService.getMuteAndBlockUsers(req.params.userid)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
 
     sendmessage: (req, res, next) => {
         userService.savemessages(req.body)
