@@ -781,18 +781,25 @@ module.exports = {
             })
     }),
 
-    getMessages: userId => new Promise((resolve, reject) => {
+    getMessages: (userId,chattinguserid) => new Promise((resolve, reject) => {
         // let sql = `select u.name as senderName, u.profile_image as senderNameProfileImage, u1.name as receiver,
         // u1.profile_image as receiverProfileImage, uc.id message_id,uc.message, uc.parent_id,uc.is_seen,uc.is_like,uc.createddate from user_chat uc
         // INNER JOIN users u ON uc.sender=u.id INNER JOIN users u1 ON uc.receiver=u1.id where uc.sender=${userId}`;
-        let messageData='';
-        let sql = `call latest_message_byuser(${userId})`;
+        let messageData='',sql='';
+        if(chattinguserid==null){
+            sql = `call latest_message_byuser(${userId})`;
+        }else{
+            sql = `call getmessagesbysenderandreceiver(${userId},${chattinguserid})`; 
+        }
+        
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result[0].length != 0) {
                     messageData=result[0];
-                    let userData=_.pluck(result[0],'receiver');
-                    let userSql=`select u.id,u.profile_image,u.username,ucd.is_block,ucd.is_mute from users u
+                    let receiverUserData=_.pluck(result[0],'receiver');
+                    let senderUserData=_.pluck(result[0],'sender');
+                    let userData=receiverUserData.concat(senderUserData);
+                    let userSql=`select u.id,u.profile_image,u.firstName,u.name,ucd.is_block,ucd.is_mute from users u
                     LEFT JOIN user_chat_details ucd ON ucd.user_id=u.id and ucd.createdby=${userId} where u.id in (${userData.toString()});`
                     return dbQuery.queryRunner(userSql);
                 } else {
@@ -808,8 +815,16 @@ module.exports = {
                     messageData.forEach(message => {
                         result.forEach(user => {
                             if(message && message.receiver == user.id) {
-                                message.profile_image=user.profile_image;
-                                message.username=user.username;
+                                message.receiver_profile_image=user.profile_image;
+                                message.receiver_id=user.id;
+                                message.receiver_name=user.name;
+                                message.is_block=user.is_block;
+                                message.is_mute=user.is_mute;
+                            }
+                            if(message && message.sender == user.id) {
+                                message.sender_profile_image=user.profile_image;
+                                message.sender_id=user.id;
+                                message.sender_name=user.name;
                                 message.is_block=user.is_block;
                                 message.is_mute=user.is_mute;
                             }
@@ -833,7 +848,7 @@ module.exports = {
                 });
             });
     }),
-
+//not use
     getMessage: usersData => new Promise((resolve, reject) => {
         // let sql = `select u.name as senderName, u.profile_image as senderNameProfileImage, u1.name as receiver,
         // u1.profile_image as receiverProfileImage, uc.id message_id,uc.message, uc.parent_id,uc.is_seen,uc.is_like,uc.createddate from user_chat uc

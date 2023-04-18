@@ -78,7 +78,8 @@ module.exports = {
 
     getMessages: (req, res, next) => {
         if (!req.params.userid)return res.status(400).send({ status: 400, message: 'Invalid data', data:req.params });
-        userService.getMessages(req.params.userid)
+        let chattinguserid=req.params.chattinguserid ? req.params.chattinguserid: null
+        userService.getMessages(req.params.userid,chattinguserid)
             .then(result => {
                 res.status(result.status || 200).send(result);
             })
@@ -92,7 +93,7 @@ module.exports = {
     },
     getMessage: (req, res, next) => {
         if (!req.params.loginuserid && req.params.chattinguserid)return res.status(400).send({ status: 400, message: 'Invalid data', data:req.params });
-        userService.getMessage(req.params)
+        userService.getMessages(req.params.loginuserid,req.params.chattinguserid)
             .then(result => {
                 res.status(result.status || 200).send(result);
             })
@@ -419,6 +420,8 @@ module.exports = {
     },
 
     getNearestUser: (req, res, next) => {
+        //if (!req.body.latitude || !req.body.longitude || !req.body.distance) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.body });
+        
         if (!req.body.latitude || !req.body.longitude) return res.status(400).send({ status: 400, message: "Invalid request.", data: req.body });
         userService.getNearestUser(req.body)
             .then(result => {
