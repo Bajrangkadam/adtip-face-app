@@ -715,7 +715,7 @@ module.exports = {
     }),
     savemessages: userData => new Promise((resolve, reject) => {
         let sql = `INSERT INTO user_chat (message,sender,receiver,parent_id,is_seen,is_active,createdby,createddate)
-             VALUE ('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId},0,1,${userData.userId}, now())`;
+             VALUE ('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId},0,1,${userData.userId}, CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'))`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
