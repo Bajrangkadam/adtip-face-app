@@ -326,7 +326,7 @@ let getFamilyRelationMaster = () => new Promise((resolve, reject) => {
             });
         });
 });
-
+//not use
 let savechat = userData => new Promise((resolve, reject) => {
     let sql = `INSERT INTO user_chat (name,is_active,createdby,createddate)
          VALUE ('${userData.name}',1,${userData.userId}, now())`;
@@ -789,24 +789,31 @@ module.exports = {
         let sql = `call latest_message_byuser(${userId})`;
         dbQuery.queryRunner(sql)
             .then(result => {
-                if (result && result.length != 0) {
+                if (result && result[0].length != 0) {
                     messageData=result[0];
                     let userData=_.pluck(result[0],'receiver');
-                    let userSql=`select id,profile_image from users where id in (${userData.toString()});`;
+                    let userSql=`select u.id,u.profile_image,u.username,ucd.is_block,ucd.is_mute from users u
+                    LEFT JOIN user_chat_details ucd ON ucd.user_id=u.id and ucd.createdby=${userId} where u.id in (${userData.toString()});`
                     return dbQuery.queryRunner(userSql);
                 } else {
                     resolve({
                         status: 200,
                         message: "Message not found.",
-                        data: result
+                        data: result[0]
                     });
                 }
             })
             .then(result =>{
-                if (result && result.length != 0) {
+                if (result && result[0].length != 0) {
                     messageData.forEach(message => {
                         result.forEach(user => {
-                            if(message && message.receiver == user.id) message.profile_image=user.profile_image;
+                            if(message && message.receiver == user.id) {
+                                message.profile_image=user.profile_image;
+                                message.username=user.username;
+                                message.is_block=user.is_block;
+                                message.is_mute=user.is_mute;
+                            }
+                            
                         });                        
                     });
                 resolve({
@@ -1484,6 +1491,8 @@ module.exports = {
 
     getNearestUser: userData => new Promise((resolve, reject) => {
         let sql = `select * from users where latitude <= '${userData.latitude}' and longitude >= '${userData.longitude}';`;
+        //let sql = `SELECT id, name, latitude,longitude,SQRT( POW(69.1 * (${userData.latitude} - 24.900363), 2) + POW(69.1 * (${userData.longitude} - 73.0254545) * COS(19.0391557 / 57.3), 2)) AS distance FROM users HAVING distance < 1000 ORDER BY distance`;
+        //let sql=`call getnearestusers('${userData.latitude}','${userData.longitude}','${userData.distance}')`
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
