@@ -986,16 +986,16 @@ module.exports = {
         let sql= `call update_seen_all_message(${userId},${chattinguserid})`;         
         dbQuery.queryRunner(sql)
             .then(result => {
-                if (result && result[0].length != 0) {
+                if (result) {
                     resolve({
                         status: 200,
-                        message: "All message deleted.",
+                        message: "All messages seen.",
                         data: []
                     });
                 } else {
                     resolve({
                         status: 200,
-                        message: "Message not deleted",
+                        message: "No message not seen",
                         data: result
                     });
                 }
