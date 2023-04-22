@@ -147,9 +147,9 @@ module.exports = {
             });
     },
 
-    deleteAllMessage: (req, res, next) => {
+    clearAllchat: (req, res, next) => {
         if (!req.params.loginuserid && req.params.chattinguserid)return res.status(400).send({ status: 400, message: 'Invalid data', data:req.params });
-        userService.deleteAllMessage(req.params.loginuserid,req.params.chattinguserid)
+        userService.clearAllchat(req.params.loginuserid,req.params.chattinguserid)
             .then(result => {
                 res.status(result.status || 200).send(result);
             })
@@ -160,7 +160,37 @@ module.exports = {
                     data: []
                 });
             });
-    },    
+    },  
+      
+    deletechatforme: (req, res, next) => {
+        if (!req.body)return res.status(400).send({ status: 400, message: 'Invalid data', data:req.body});
+        userService.deletechatforme(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    }, 
+    
+    deletechatforEveryone: (req, res, next) => {
+        if (!req.body)return res.status(400).send({ status: 400, message: 'Invalid data', data:req.body});
+        userService.deletechatforEveryone(req.body)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    }, 
     
     seenAllMessage: (req, res, next) => {
         if (!req.params.loginuserid && req.params.chattinguserid)return res.status(400).send({ status: 400, message: 'Invalid data', data:req.params });

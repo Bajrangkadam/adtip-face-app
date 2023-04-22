@@ -561,11 +561,28 @@ let sendNotification = userData => new Promise((resolve, reject) => {
 
 let smsNotification = userData => new Promise((resolve, reject) => {
     let notificationBody = '';
-    let userDetailsSQL = `select (select profile_image from users where id=${userData.userId}) as profileImage,(select name from users where id=${userData.userId}) as username,(select device_token from users where id=${userData.userId}) as registrationToken`
+    let userDetailsSQL = `select (select profile_image from users where id=${userData.userId}) as profileImage,
+    (select name from users where id=${userData.userId}) as username,
+    (select device_token from users where id=${userData.receiverId}) as registrationToken,
+    (select is_block from user_chat_details where createdby=${userData.receiverId} and user_id=${userData.userId}) as is_block,
+    (select is_mute from user_chat_details where createdby=${userData.receiverId} and user_id=${userData.userId}) as is_mute;`
+    //let userDetailsSQL=`call get_notification_user_details(${userData.userId},${userData.receiverId});`
     return dbQuery.queryRunner(userDetailsSQL)
         .then(result => {
             if (result && result.length != 0 && result[0].registrationToken != null) {
-                notificationBody = { messageId: userData.messageId,senderId: userData.userId, profileImage: result[0].profileImage, notificationId: userData.enum, createdBy: userData.userId, title: enums.notification[userData.enum], message: `${result[0].username} ${enums.notification[userData.enum]}`, registrationToken: result[0].registrationToken };
+                notificationBody = {  
+                    messageId: userData.messageId,
+                    senderId: userData.userId,
+                    profileImage: result[0].profileImage,
+                    notificationId: userData.enum,
+                    createdBy: userData.userId,
+                    title: enums.notification[userData.enum],
+                    messageContent: userData.message,
+                    is_mute:result[0].is_mute,
+                    is_block:result[0].is_block,
+                    message: `${result[0].username} ${enums.notification[userData.enum]}`,
+                    registrationToken: result[0].registrationToken 
+                };
                 return utils.sendFcmNotification(notificationBody);
             } else {
                 return reject({
@@ -801,8 +818,11 @@ module.exports = {
                     let senderUserData=_.pluck(result[0],'sender');
                     let userData=receiverUserData.concat(senderUserData);
                     userData=_.uniq(userData);
-                    let userSql=`select u.id,u.profile_image,u.firstName,u.name,ucd.is_block,ucd.is_mute from users u
-                    LEFT JOIN user_chat_details ucd ON ucd.user_id=u.id and ucd.createdby=${userId} where u.id in (${userData.toString()});`
+                   let d= _.without(userData,parseInt(userId));
+                    let userSql=`select u.id,u.profile_image,u.firstName,u.name,IFNULL(ucd.is_block,0) as is_block,
+                    IFNULL(ucd.is_mute,0) as is_mute from users u
+                    LEFT JOIN user_chat_details ucd ON ucd.user_id=u.id and ucd.createdby=${userId} where u.id in 
+                    (${d.toString()});`
                     return dbQuery.queryRunner(userSql);
                 } else {
                     resolve({
@@ -827,8 +847,8 @@ module.exports = {
                                 message.sender_profile_image=user.profile_image;
                                 message.sender_id=user.id;
                                 message.sender_name=user.name;
-                                message.is_block=null;
-                                message.is_mute=null;
+                                message.is_block=user.is_block;
+                                message.is_mute=user.is_mute;
                             }
                             
                         });                        
@@ -881,20 +901,74 @@ module.exports = {
             });
     }),
 
-    deleteAllMessage: (userId,chattinguserid) => new Promise((resolve, reject) => {
-        let sql= `call getmessagesbysenderandreceiver(${userId},${chattinguserid})`;         
+    clearAllchat: (userId,chattinguserid) => new Promise((resolve, reject) => {
+        let sql= `call clear_all_chat(${userId},${chattinguserid})`;         
         dbQuery.queryRunner(sql)
             .then(result => {
-                if (result && result[0].length != 0) {
+                if (result) {
                     resolve({
                         status: 200,
-                        message: "All message deleted.",
+                        message: "All chat deleted.",
                         data: []
                     });
                 } else {
                     resolve({
                         status: 200,
-                        message: "Message not deleted",
+                        message: "Chat not deleted",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    deletechatforme: userData => new Promise((resolve, reject) => {
+        let sql= `call delete_chat_for_me(${userData.userId},${userData.chattinguserid},'${userData.messagesId.toString()}')`;         
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result) {
+                    resolve({
+                        status: 200,
+                        message: "All chat deleted.",
+                        data: []
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "Chat not deleted",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+
+    deletechatforEveryone: userData => new Promise((resolve, reject) => {
+        let sql= `call delete_chat_for_everyone(${userData.userId},${userData.chattinguserid},'${userData.messagesId.toString()}')`;         
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result) {
+                    resolve({
+                        status: 200,
+                        message: "All chat deleted.",
+                        data: []
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "Chat not deleted",
                         data: result
                     });
                 }

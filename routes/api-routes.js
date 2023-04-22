@@ -49,11 +49,10 @@ router.post('/updatechatuser', UsersController.updateBlockUser);
 router.get('/getmessages/:userid', UsersController.getMessages);
 router.get('/getmessage/:loginuserid/:chattinguserid', UsersController.getMessage);
 router.get('/getmuteandblockusers/:userid', UsersController.getMuteAndBlockUsers);
-router.get('/deleteallmessage/:loginuserid/:chattinguserid', UsersController.deleteAllMessage);
+router.get('/clearallchat/:loginuserid/:chattinguserid', UsersController.clearAllchat);
+router.post('/deletechatforme', UsersController.deletechatforme);
+router.post('/deletechatforeveryone', UsersController.deletechatforEveryone);
 router.get('/seenallmessage/:loginuserid/:chattinguserid', UsersController.seenAllMessage);
-
-
-
 
 router.get('/termscondition', MasterController.getTermscondition);
 router.get('/flashscreen/:filename', MasterController.getFlashScreen);
