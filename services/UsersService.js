@@ -2,6 +2,7 @@ const _ = require('underscore');
 const utils = require('../utils/utils');
 const enums = require('../utils/enums');
 const dbQuery = require('../dbConfig/queryRunner');
+const { log } = require('winston');
 
 let updateOtpUser = userData => new Promise((resolve, reject) => {
     let sql = `update users set otp='${userData.otp}',message_id='${userData.messageId}' where mobile_number='${userData.mobileNumber}'`;
@@ -570,7 +571,7 @@ let smsNotification = userData => new Promise((resolve, reject) => {
     return dbQuery.queryRunner(userDetailsSQL)
         .then(result => {
             if (result && result.length != 0 && result[0].registrationToken != null) {
-                notificationBody = {  
+                notificationBody = {
                     messageId: userData.messageId,
                     senderId: userData.userId,
                     profileImage: result[0].profileImage,
@@ -578,10 +579,10 @@ let smsNotification = userData => new Promise((resolve, reject) => {
                     createdBy: userData.userId,
                     title: enums.notification[userData.enum],
                     messageContent: userData.message,
-                    is_mute:result[0].is_mute,
-                    is_block:result[0].is_block,
+                    is_mute: result[0].is_mute,
+                    is_block: result[0].is_block,
                     message: `${result[0].username} ${enums.notification[userData.enum]}`,
-                    registrationToken: result[0].registrationToken 
+                    registrationToken: result[0].registrationToken
                 };
                 return utils.sendFcmNotification(notificationBody);
             } else {
@@ -614,6 +615,30 @@ let smsNotification = userData => new Promise((resolve, reject) => {
             VALUES (${userData.userId},'${notificationBody.title}',${notificationBody.notificationId},'${notificationBody.registrationToken}','${notificationBody.message}','${JSON.stringify(err)}',0,${userData.userId},CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'));`;
             dbQuery.queryRunner(notificationSql);
             reject(err);
+        })
+});
+
+let getUserAvgRating = userData => new Promise((resolve, reject) => {
+    dbQuery.queryRunner(`call user_avg_rating`)
+        .then(result => {
+            if (userData && userData.length != 0) {
+                userData.forEach(element => {
+                    let filteruserData = result[0].filter(user => user.id == element.id);
+                    if (filteruserData && filteruserData.length != 0) element.avg_rating = filteruserData[0].avg_rating;
+                });
+            }
+            resolve({
+                status: 200,
+                message: "Fetch users successfully.",
+                data: userData
+            });
+
+        }).catch(err => {
+            reject({
+                status: 500,
+                message: err,
+                data: []
+            });
         })
 });
 
@@ -734,7 +759,7 @@ module.exports = {
     savemessages: userData => new Promise((resolve, reject) => {
         // let sql = `INSERT INTO user_chat (message,sender,receiver,parent_id,is_seen,is_active,createdby,createddate)
         //      VALUE ('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId},0,1,${userData.userId}, CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'))`;
-        let sql=`call save_message('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId})`
+        let sql = `call save_message('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId})`
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result[0].length != 0 && result[0][0].message == 1) {
@@ -800,27 +825,27 @@ module.exports = {
             })
     }),
 
-    getMessages: (userId,chattinguserid) => new Promise((resolve, reject) => {
+    getMessages: (userId, chattinguserid) => new Promise((resolve, reject) => {
         // let sql = `select u.name as senderName, u.profile_image as senderNameProfileImage, u1.name as receiver,
         // u1.profile_image as receiverProfileImage, uc.id message_id,uc.message, uc.parent_id,uc.is_seen,uc.is_like,uc.createddate from user_chat uc
         // INNER JOIN users u ON uc.sender=u.id INNER JOIN users u1 ON uc.receiver=u1.id where uc.sender=${userId}`;
-        let messageData='',sql='';
-        if(chattinguserid==null){
+        let messageData = '', sql = '';
+        if (chattinguserid == null) {
             sql = `call latest_message_byuser(${userId})`;
-        }else{
-            sql = `call getmessagesbysenderandreceiver(${userId},${chattinguserid})`; 
+        } else {
+            sql = `call getmessagesbysenderandreceiver(${userId},${chattinguserid})`;
         }
-        
+
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result[0].length != 0) {
-                    messageData=result[0];
-                    let receiverUserData=_.pluck(result[0],'receiver');
-                    let senderUserData=_.pluck(result[0],'sender');
-                    let userData=receiverUserData.concat(senderUserData);
-                    userData=_.uniq(userData);
-                   let d= _.without(userData,parseInt(userId));
-                    let userSql=`select u.id,u.profile_image,u.firstName,u.name,IFNULL(ucd.is_block,0) as is_block,
+                    messageData = result[0];
+                    let receiverUserData = _.pluck(result[0], 'receiver');
+                    let senderUserData = _.pluck(result[0], 'sender');
+                    let userData = receiverUserData.concat(senderUserData);
+                    userData = _.uniq(userData);
+                    let d = _.without(userData, parseInt(userId));
+                    let userSql = `select u.id,u.profile_image,u.firstName,u.name,IFNULL(ucd.is_block,0) as is_block,
                     IFNULL(ucd.is_mute,0) as is_mute from users u
                     LEFT JOIN user_chat_details ucd ON ucd.user_id=u.id and ucd.createdby=${userId} where u.id in 
                     (${d.toString()});`
@@ -833,35 +858,35 @@ module.exports = {
                     });
                 }
             })
-            .then(result =>{
+            .then(result => {
                 if (result && result[0].length != 0) {
                     messageData.forEach(message => {
                         result.forEach(user => {
-                            if(message && message.receiver == user.id) {
-                                message.receiver_profile_image=user.profile_image;
-                                message.receiver_id=user.id;
-                                message.receiver_name=user.name;
-                                message.is_block=user.is_block;
-                                message.is_mute=user.is_mute;
+                            if (message && message.receiver == user.id) {
+                                message.receiver_profile_image = user.profile_image;
+                                message.receiver_id = user.id;
+                                message.receiver_name = user.name;
+                                message.is_block = user.is_block;
+                                message.is_mute = user.is_mute;
                             }
-                            if(message && message.sender == user.id) {
-                                message.sender_profile_image=user.profile_image;
-                                message.sender_id=user.id;
-                                message.sender_name=user.name;
-                                message.is_block=user.is_block;
-                                message.is_mute=user.is_mute;
+                            if (message && message.sender == user.id) {
+                                message.sender_profile_image = user.profile_image;
+                                message.sender_id = user.id;
+                                message.sender_name = user.name;
+                                message.is_block = user.is_block;
+                                message.is_mute = user.is_mute;
                             }
-                            
-                        });                        
+
+                        });
                     });
-                resolve({
-                    status: 200,
-                    message: "Fetch data successfully.",
-                    data: messageData
-                });
-            }else{
-                resolve(result);
-            }
+                    resolve({
+                        status: 200,
+                        message: "Fetch data successfully.",
+                        data: messageData
+                    });
+                } else {
+                    resolve(result);
+                }
             })
             .catch(err => {
                 reject({
@@ -871,7 +896,7 @@ module.exports = {
                 });
             });
     }),
-//not use
+    //not use
     getMessage: usersData => new Promise((resolve, reject) => {
         // let sql = `select u.name as senderName, u.profile_image as senderNameProfileImage, u1.name as receiver,
         // u1.profile_image as receiverProfileImage, uc.id message_id,uc.message, uc.parent_id,uc.is_seen,uc.is_like,uc.createddate from user_chat uc
@@ -902,8 +927,8 @@ module.exports = {
             });
     }),
 
-    clearAllchat: (userId,chattinguserid) => new Promise((resolve, reject) => {
-        let sql= `call clear_all_chat(${userId},${chattinguserid})`;         
+    clearAllchat: (userId, chattinguserid) => new Promise((resolve, reject) => {
+        let sql = `call clear_all_chat(${userId},${chattinguserid})`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result) {
@@ -930,7 +955,7 @@ module.exports = {
     }),
 
     deletechatforme: userData => new Promise((resolve, reject) => {
-        let sql= `call delete_chat_for_me(${userData.userId},${userData.chattinguserid},'${userData.messagesId.toString()}')`;         
+        let sql = `call delete_chat_for_me(${userData.userId},${userData.chattinguserid},'${userData.messagesId.toString()}')`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result) {
@@ -957,7 +982,7 @@ module.exports = {
     }),
 
     deletechatforEveryone: userData => new Promise((resolve, reject) => {
-        let sql= `call delete_chat_for_everyone(${userData.userId},${userData.chattinguserid},'${userData.messagesId.toString()}')`;         
+        let sql = `call delete_chat_for_everyone(${userData.userId},${userData.chattinguserid},'${userData.messagesId.toString()}')`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result) {
@@ -982,9 +1007,9 @@ module.exports = {
                 });
             });
     }),
-    
-    seenAllMessage: (userId,chattinguserid) => new Promise((resolve, reject) => {
-        let sql= `call update_seen_all_message(${userId},${chattinguserid})`;         
+
+    seenAllMessage: (userId, chattinguserid) => new Promise((resolve, reject) => {
+        let sql = `call update_seen_all_message(${userId},${chattinguserid})`;
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result) {
@@ -1481,40 +1506,33 @@ module.exports = {
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result && result.length != 0) {
-                    let finalData = [];
                     let updateResult = dbDataMapping(result);
-                    let categaryData = _.pluck(updateResult, 'professionName');
-                    categaryData = _.uniq(categaryData);
-                    if (categaryData && categaryData.length != 0) {
-                        categaryData.forEach(element => {
-                            let usersData = _.filter(updateResult, user => user.professionName === element);
-                            let categaryObj = {
-                                id: usersData && usersData.length != 0 ? usersData[0].profession : null,
-                                name: element,
-                                users: usersData
-                            }
-                            finalData.push(categaryObj);
-                        });
-                    }
-                    // var groupBy = function (xs, key) {
-                    //     return xs.reduce(function (rv, x) {
-                    //         (rv[x[key]] = rv[x[key]] || []).push(x);
-                    //         return rv;
-                    //     }, {});
-                    // };
-                    // let groubedByTeam = groupBy(updateResult, 'professionName')
-                    resolve({
-                        status: 200,
-                        message: "Fetch user successfully.",
-                        data: finalData
-                    });
+                    return getUserAvgRating(updateResult);
                 } else {
-                    reject({
-                        status: 400,
-                        message: "User not found.",
-                        data: result
+                    return result;
+                }
+            })
+            .then(result => {
+                //return getUserAvgRating(result);
+                if(result && result.data.length != 0){
+                let finalData = [];               
+                let categaryData = _.pluck(result.data, 'professionName');
+                categaryData = _.uniq(categaryData);
+                if (categaryData && categaryData.length != 0) {
+                    categaryData.forEach(element => {
+                        let usersData = _.filter(result.data, user => user.professionName === element);
+                        let categaryObj = {
+                            id: usersData && usersData.length != 0 ? usersData[0].profession : null,
+                            name: element,
+                            users: usersData
+                        }
+                        finalData.push(categaryObj);
                     });
                 }
+                resolve(finalData);
+            }else{
+                resolve(result);
+            }
             })
             .catch(err => {
                 reject({
@@ -1819,18 +1837,16 @@ module.exports = {
             .then(result => {
                 if (result && result.length != 0) {
                     let updateResult = dbDataMapping(result);
-                    resolve({
-                        status: 200,
-                        message: "Fetch users successfully.",
-                        data: updateResult
-                    });
+                    return updateResult;
                 } else {
-                    resolve({
-                        status: 200,
-                        message: "users not found.",
-                        data: result
-                    });
+                    return result;
                 }
+            })
+            .then(result => {
+                return getUserAvgRating(result)
+            })
+            .then(result => {
+                resolve(result);
             })
             .catch(err => {
                 reject({
@@ -1851,18 +1867,21 @@ module.exports = {
             .then(result => {
                 if (result && result.length != 0) {
                     let updateResult = dbDataMapping(result);
-                    resolve({
-                        status: 200,
-                        message: "Fetch users successfully.",
-                        data: updateResult
-                    });
+                    return updateResult;
                 } else {
-                    resolve({
-                        status: 200,
-                        message: "users not found.",
-                        data: result
-                    });
+                    return result;
+                    // resolve({
+                    //     status: 200,
+                    //     message: "users not found.",
+                    //     data: result
+                    // });
                 }
+            })
+            .then(result =>{
+                return getUserAvgRating(result);
+            })
+            .then(result =>{
+                resolve(result);
             })
             .catch(err => {
                 reject({
@@ -1947,7 +1966,7 @@ module.exports = {
 
     getReceivedNotification: userId => new Promise((resolve, reject) => {
         let sql = `select u.id, u.name, u.profile_image, n.title,n.message,n.notification_type,n.created_date,n.created_date,DATE_FORMAT(n.created_date,'%d/%m/%Y') AS formated_date from users u
-        LEFT JOIN notifications n ON n.createdby=u.id where u.is_active=1 and n.user_id=${userId} and n.is_active=1 order by u.created_date desc`;
+        LEFT JOIN notifications n ON n.createdby=u.id where u.is_active=1 and n.user_id=${userId} and n.is_active=1 and n.notification_type !=6 order by u.created_date desc`;
 
         //LEFT JOIN user_details ud ON ud.user_id=u.id and ud.created_by=${userId}
         dbQuery.queryRunner(sql)
