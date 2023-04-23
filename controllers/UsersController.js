@@ -206,6 +206,21 @@ module.exports = {
                 });
             });
     },
+    
+    getUnSeenMessageCount: (req, res, next) => {
+        if (!req.params.loginuserid)return res.status(400).send({ status: 400, message: 'Invalid data', data:req.params });
+        userService.getUnSeenMessageCount(req.params.loginuserid)
+            .then(result => {
+                res.status(result.status || 200).send(result);
+            })
+            .catch(err => {
+                res.status(err.status || 500).send({
+                    status: err.status || 500,
+                    message: err.message ? err.message : "Internal server error.",
+                    data: []
+                });
+            });
+    },
     updateUser: (req, res, next) => {
         if (!req.body.id) return res.status(400).send({ status: 400, message: "Invalid request.", data: [] });
         userService.updateUser(req.body)

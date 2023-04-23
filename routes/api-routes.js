@@ -53,6 +53,7 @@ router.get('/clearallchat/:loginuserid/:chattinguserid', UsersController.clearAl
 router.post('/deletechatforme', UsersController.deletechatforme);
 router.post('/deletechatforeveryone', UsersController.deletechatforEveryone);
 router.get('/seenallmessage/:loginuserid/:chattinguserid', UsersController.seenAllMessage);
+router.get('/getunseenmessagecount/:loginuserid', UsersController.getUnSeenMessageCount);
 
 router.get('/termscondition', MasterController.getTermscondition);
 router.get('/flashscreen/:filename', MasterController.getFlashScreen);

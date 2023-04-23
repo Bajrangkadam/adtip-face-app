@@ -732,11 +732,12 @@ module.exports = {
             })
     }),
     savemessages: userData => new Promise((resolve, reject) => {
-        let sql = `INSERT INTO user_chat (message,sender,receiver,parent_id,is_seen,is_active,createdby,createddate)
-             VALUE ('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId},0,1,${userData.userId}, CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'))`;
+        // let sql = `INSERT INTO user_chat (message,sender,receiver,parent_id,is_seen,is_active,createdby,createddate)
+        //      VALUE ('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId},0,1,${userData.userId}, CONVERT_TZ(CURRENT_TIMESTAMP(),'+00:00','+05:30'))`;
+        let sql=`call save_message('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId})`
         dbQuery.queryRunner(sql)
             .then(result => {
-                if (result && result.length != 0) {
+                if (result && result[0].length != 0 && result[0][0].message == 1) {
                     userData.enum = 6;
                     userData.messageId = result.insertId;
                     smsNotification(userData)
@@ -748,7 +749,7 @@ module.exports = {
                 } else {
                     reject({
                         status: 400,
-                        message: "Message not send.",
+                        message: "Message not send, User blocked you.",
                         data: result
                     });
                 }
@@ -996,6 +997,33 @@ module.exports = {
                     resolve({
                         status: 200,
                         message: "No message not seen",
+                        data: result
+                    });
+                }
+            })
+            .catch(err => {
+                reject({
+                    status: 500,
+                    message: err,
+                    data: []
+                });
+            });
+    }),
+    
+    getUnSeenMessageCount: userId => new Promise((resolve, reject) => {
+        let sql = `call get_unseen_count(${userId})`;
+        dbQuery.queryRunner(sql)
+            .then(result => {
+                if (result && result.length != 0) {
+                    resolve({
+                        status: 200,
+                        message: "Fetch data successfully.",
+                        data: result[0]
+                    });
+                } else {
+                    resolve({
+                        status: 200,
+                        message: "Message not found.",
                         data: result
                     });
                 }
