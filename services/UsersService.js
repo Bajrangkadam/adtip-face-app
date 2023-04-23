@@ -762,9 +762,9 @@ module.exports = {
         let sql = `call save_message('${userData.message}',${userData.userId},${userData.receiverId},${userData.parentId})`
         dbQuery.queryRunner(sql)
             .then(result => {
-                if (result && result[0].length != 0 && result[0][0].message == 1) {
+                if (result && result[0].length != 0 && result[0][0].insertId != 0) {
                     userData.enum = 6;
-                    userData.messageId = result.insertId;
+                    userData.messageId = result[0][0].insertId;
                     smsNotification(userData)
                     resolve({
                         status: 200,
