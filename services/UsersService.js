@@ -337,13 +337,13 @@ let savechat = userData => new Promise((resolve, reject) => {
                 userData.id = result.insertId;
                 resolve({
                     status: 200,
-                    message: "User chat added successfully.",
+                    message: "chat added successfully.",
                     data: [userData]
                 });
             } else {
                 reject({
                     status: 400,
-                    message: "User chat not saved.",
+                    message: "chat not saved.",
                     data: result
                 });
             }
@@ -846,8 +846,10 @@ module.exports = {
                     userData = _.uniq(userData);
                     let d = _.without(userData, parseInt(userId));
                     let userSql = `select u.id,u.profile_image,u.firstName,u.name,IFNULL(ucd.is_block,0) as is_block,
-                    IFNULL(ucd.is_mute,0) as is_mute from users u
-                    LEFT JOIN user_chat_details ucd ON ucd.user_id=u.id and ucd.createdby=${userId} where u.id in 
+                    IFNULL(ucd.is_mute,0) as is_mute,ud.is_rating_profile,ud.rating from users u
+                    LEFT JOIN user_chat_details ucd ON ucd.user_id=u.id and ucd.createdby=${userId} 
+                    LEFT JOIN user_details ud ON ud.user_id=u.id and ud.created_by=${userId}                    
+                    where u.id in 
                     (${d.toString()});`
                     return dbQuery.queryRunner(userSql);
                 } else {
@@ -868,6 +870,8 @@ module.exports = {
                                 message.receiver_name = user.name;
                                 message.is_block = user.is_block;
                                 message.is_mute = user.is_mute;
+                                message.is_rating_profile = user.is_rating_profile;
+                                message.rating = user.rating;
                             }
                             if (message && message.sender == user.id) {
                                 message.sender_profile_image = user.profile_image;
@@ -875,6 +879,8 @@ module.exports = {
                                 message.sender_name = user.name;
                                 message.is_block = user.is_block;
                                 message.is_mute = user.is_mute;
+                                message.is_rating_profile = user.is_rating_profile;
+                                message.rating = user.rating;
                             }
 
                         });
@@ -934,7 +940,7 @@ module.exports = {
                 if (result) {
                     resolve({
                         status: 200,
-                        message: "All chat deleted.",
+                        message: "chat deleted.",
                         data: []
                     });
                 } else {
@@ -961,7 +967,7 @@ module.exports = {
                 if (result) {
                     resolve({
                         status: 200,
-                        message: "All chat deleted.",
+                        message: "chat deleted.",
                         data: []
                     });
                 } else {
@@ -988,7 +994,7 @@ module.exports = {
                 if (result) {
                     resolve({
                         status: 200,
-                        message: "All chat deleted.",
+                        message: "chat deleted.",
                         data: []
                     });
                 } else {
@@ -1529,7 +1535,11 @@ module.exports = {
                         finalData.push(categaryObj);
                     });
                 }
-                resolve(finalData);
+                resolve({
+                    status: 200,
+                    message: "Fetch user successfully.",
+                    data: finalData
+                });
             }else{
                 resolve(result);
             }
