@@ -5,5 +5,7 @@ module.exports.notification = {
     3: 'seen your profile',
     4: 'liked your profile',
     5: 'saved your profile',
-    6: 'sent message'
+    6: 'sent you a message',
+    7: 'seen messages',
+    8: 'delete conversions'
   }

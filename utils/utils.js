@@ -42,11 +42,11 @@ module.exports = {
             //to: 'erI8cmj4TrSaTwkFMgxv6N:APA91bG-c_fdSWN3CTmBZG1a9oZr2_o4aPHuczglHRWNLOgALQhZtqRRYLiVqOPIY90BHcky6BwcwJDo3sK5wc1l2t0XHhWUSajpoVVUdeok9ZeC7CxTgbykvSVapbhOHeLDnPKPtQGi',
             to: userData.registrationToken,
             notification: {
-                title: userData.title,
-                body: userData.message
+                title: userData.title ? userData.title : '',
+                body: userData.message ? userData.message : ''
             },        
             data: { //you can send only notification or only data(or include both)
-                title: userData.title,
+                title: userData.title ? userData.title : '',
                 body: JSON.stringify(userData)
             }        
         };
