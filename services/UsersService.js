@@ -992,7 +992,7 @@ module.exports = {
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result) {
-                    sendNotification({createdBy: userData.userId,userId:userData.chattinguserid,enum : 8});
+                    sendNotification({createdBy: userData.userId,userId:userData.chattinguserid,enum : 8,messageId: userData.messagesId.toString()});
                     resolve({
                         status: 200,
                         message: "chat deleted.",
@@ -1020,7 +1020,7 @@ module.exports = {
         dbQuery.queryRunner(sql)
             .then(result => {
                 if (result) {
-                    sendNotification({createdBy: userId,userId:chattinguserid,enum : 7})
+                    sendNotification({createdBy: userId,userId:chattinguserid,enum : 7,messageId: null})
                     resolve({
                         status: 200,
                         message: "All messages seen.",
