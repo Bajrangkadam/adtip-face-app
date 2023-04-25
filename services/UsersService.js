@@ -526,7 +526,7 @@ let sendNotification = userData => new Promise((resolve, reject) => {
     return dbQuery.queryRunner(userDetailsSQL)
         .then(result => {
             if (result && result.length != 0 && result[0].registrationToken != null) {
-                notificationBody = { userId: userData.userId, profileImage: result[0].profileImage, notificationId: userData.enum, createdBy: userData.createdBy, title: enums.notification[userData.enum], message: `${result[0].username} ${enums.notification[userData.enum]}`, registrationToken: result[0].registrationToken };
+                notificationBody = {  messageId: userData.messageId ? userData.messageId: null,userId: userData.userId, profileImage: result[0].profileImage, notificationId: userData.enum, createdBy: userData.createdBy, title: enums.notification[userData.enum], message: `${result[0].username} ${enums.notification[userData.enum]}`, registrationToken: result[0].registrationToken };
                 return utils.sendFcmNotification(notificationBody);
             } else {
                 return reject({
